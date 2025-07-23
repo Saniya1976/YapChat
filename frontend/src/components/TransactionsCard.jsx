@@ -1,5 +1,6 @@
 import React from "react";
-import transactionIcon from "../../../assets/icons/transactions.png"; // correct path
+
+ // correct path
 
 const TransactionsCard = () => {
   const transactions = [
@@ -18,7 +19,9 @@ const TransactionsCard = () => {
           View More
         </button>
       </div>
-
+      <div>
+          <img src="/assets/images/transactions.png" alt="transaction icon" />
+      </div>
       <div className="mt-4 space-y-2">
         {transactions.map((transaction) => (
           <div key={transaction.id} className="flex items-center space-x-2">
