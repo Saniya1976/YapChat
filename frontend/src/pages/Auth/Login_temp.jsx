@@ -1,63 +1,52 @@
-import React, { useState } from 'react';
-import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom'; // Don't forget this!
+import AuthLayout from '../../components/layouts/AuthLayout';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    // Add your login logic here
+  };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
-        <h1 className="text-2xl font-bold text-white text-center mb-6">Welcome Back</h1>
-        
-        <form className="space-y-4">
-          {/* Email Field */}
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18}/>
+    <AuthLayout>
+      <div>
+        <div className="lg:w-[70%] h-3/4 md:h-full flex flex-col justify-center">
+          <h3 className="text-xl font-semibold text-black">Welcome Back</h3>
+          <p className="text-xs text-slate-700 mt-[5px] mb-6">
+            Please enter your details to log in
+          </p>
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400"
               placeholder="Email"
-              required
+              value={email}
+              onChange={({ target }) => setEmail(target.value)}
+              className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-purple-500"
             />
-          </div>
-
-          {/* Password Field with Toggle */}
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18}/>
             <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 bg-slate-800/50 border border-slate-600 rounded-lg text-white placeholder-slate-400"
+              type="password"
               placeholder="Password"
-              required
+              value={password}
+              onChange={({ target }) => setPassword(target.value)}
+              className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-purple-500"
             />
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white"
+              type="submit"
+              className="bg-purple-600 text-white p-3 rounded-lg hover:bg-purple-700 transition-colors duration-200"
             >
-              {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
+              Log In
             </button>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700"
-          >
-            Sign In <ArrowRight size={18}/>
-          </button>
-        </form>
-
-        <p className="text-slate-300 text-sm mt-4 text-center">
-          Don't have an account? <a href="#" className="text-blue-400">Sign up</a>
-        </p>
+          </form>
+        </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 
