@@ -6,7 +6,7 @@ const apiSecret = process.env.STREAM_API_SECRET;
 
 // Check if env variables are available
 if (!apiKey || !apiSecret) {
-  console.error("❌ Stream API Key or Secret is missing!");
+  console.error(" Stream API Key or Secret is missing!");
   process.exit(1); // Exit the process if credentials are missing
 }
 
@@ -22,7 +22,7 @@ export const upsertStreamUser = async (userData) => {
     await streamClient.upsertUsers([userData]);
     return userData;
   } catch (error) {
-    console.error("❌ Error creating/updating Stream user:", error.message);
+    console.error(" Error creating/updating Stream user:", error.message);
     throw error;
   }
 };
@@ -41,7 +41,7 @@ export const generateStreamToken = async (userId) => {
     const token = streamClient.createToken(userId);
     return token;
   } catch (error) {
-    console.error("❌ Error generating Stream token:", error.message);
+    console.error(" Error generating Stream token:", error.message);
     throw error;
   }
 };

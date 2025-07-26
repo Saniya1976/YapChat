@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import { upsertStreamUser } from '../lib/stream.js';
 
+
 export async function signup(req, res) {
  const {fullName,email,password} = req.body;
  try {
@@ -91,38 +92,52 @@ export async function logout(req, res) {
     
   }
 } 
-export async function onboard(req,res){
-  const {fullName,bio,nativeLanguage,learningLanguage,location}=req.body;
+
+export async function onboard(req, res) {
   try {
-   if(!fullName || !bio || !nativeLanguage || !learningLanguage || !location){
-     return res.status(400).json({message: 'All fields are required',
-      missingFields: {
-        fullName: !fullName,
-        bio: !bio,
-        nativeLanguage: !nativeLanguage,
-        learningLanguage: !learningLanguage,
-        location: !location
-      }
-     });
-   }
- const updatedUser= await User.findByIdAndUpdate(userId,{
-   fullName,
-   bio,
-   nativeLanguage,
-   learningLanguage,
-   location,
-   isOnboarded: true
- },{
-   new: true,
-   runValidators: true
- });
- //todo: handle stream user creation or update
-  if(!updatedUser){
-    return res.status(404).json({message: 'User not found'});
-  }
-  return res.status(200).json({message: 'User onboarded successfully', user: updatedUser});
-} catch (error) {
+    const userId = req.user._id;
+
+    const { fullName, bio, nativeLanguage, learningLanguage, location } = req.body;
+
+    if (!fullName || !bio || !nativeLanguage || !learningLanguage || !location) {
+      return res.status(400).json({
+        message: 'All fields are required',
+        missingFields: [
+          !fullName && 'fullName',
+          !bio && 'bio',
+          !nativeLanguage && 'nativeLanguage',
+          !learningLanguage && 'learningLanguage',
+          !location && 'location'
+        ].filter(Boolean),
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        fullName,
+        bio,
+        nativeLanguage,
+        learningLanguage,
+        location,
+        isOnboarded: true
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await upsertStreamUser({
+      id: updatedUser._id.toString(),
+      name: updatedUser.fullName,
+      image: "https://avatar.iran.liara.run/public/30.png"
+    });
+
+    return res.status(200).json({ message: 'User onboarded successfully', user: updatedUser });
+  } catch (error) {
     console.error('Error during onboarding:', error);
-    return res.status(500).json({message: 'Internal server error'});
+    return res.status(500).json({ message: 'Internal server error' });
   }
-}  
+}
