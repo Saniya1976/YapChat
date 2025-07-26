@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
+import { upsertStreamUser } from '../lib/stream.js';
 
 export async function signup(req, res) {
  const {fullName,email,password} = req.body;
@@ -27,6 +28,18 @@ export async function signup(req, res) {
     password,
     profilePic: randomAvatar
   })
+ try {
+   await upsertStreamUser({
+    id:newUser._id.toString(),
+    name:newUser.fullName,
+    image:newUser.profilePic || ""
+  })
+  console.log(`stream user created for ${newUser.fullName}`)
+ } catch (error) {
+   console.error('Error creating/updating Stream user:', error);
+ }
+
+
   const token=jwt.sign({userId:newUser._id},process.env.JWT_SECRET,{expiresIn:'7d'});
   res.cookie('jwt', token, {
     httpOnly: true,
@@ -34,6 +47,7 @@ export async function signup(req, res) {
     secure: process.env.NODE_ENV === 'production',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
+
   return res.status(201).json({message: 'User created successfully', user: newUser});
  } catch (error) {
   console.error('Error during signup:', error);
@@ -54,7 +68,7 @@ export async function login(req, res) {
   if(!isMatch){
     return res.status(400).json({message: 'Invalid email or password'});
   }
-  const token=jwt.sign({userId:user_id},process.env.JWT_SECRET,{expiresIn:'7d'});
+  const token=jwt.sign({userId:user._id},process.env.JWT_SECRET,{expiresIn:'7d'});
   res.cookie('jwt', token, {
     httpOnly: true,
     sameSite: 'strict',
@@ -68,5 +82,47 @@ export async function login(req, res) {
  }
 }
 export async function logout(req, res) {
-  res.send('Logout Route');
-}   
+  try {
+    res.clearCookie('jwt');
+    return res.status(200).json({message: 'Logout successful'});
+  } catch (error) {
+    console.error('Error during logout:', error);
+    return res.status(500).json({message: 'Internal server error'});
+    
+  }
+} 
+export async function onboard(req,res){
+  const {fullName,bio,nativeLanguage,learningLanguage,location}=req.body;
+  try {
+   if(!fullName || !bio || !nativeLanguage || !learningLanguage || !location){
+     return res.status(400).json({message: 'All fields are required',
+      missingFields: {
+        fullName: !fullName,
+        bio: !bio,
+        nativeLanguage: !nativeLanguage,
+        learningLanguage: !learningLanguage,
+        location: !location
+      }
+     });
+   }
+ const updatedUser= await User.findByIdAndUpdate(userId,{
+   fullName,
+   bio,
+   nativeLanguage,
+   learningLanguage,
+   location,
+   isOnboarded: true
+ },{
+   new: true,
+   runValidators: true
+ });
+ //todo: handle stream user creation or update
+  if(!updatedUser){
+    return res.status(404).json({message: 'User not found'});
+  }
+  return res.status(200).json({message: 'User onboarded successfully', user: updatedUser});
+} catch (error) {
+    console.error('Error during onboarding:', error);
+    return res.status(500).json({message: 'Internal server error'});
+  }
+}  
