@@ -1,57 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100..900&family=Winky+Rough:ital,wght@0,300..900;1,300..900&display=swap');
 
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* ✅ Custom Tailwind classes inside @layer */
-@layer components {
-  .btn {
-    @apply px-4 py-2 rounded-lg text-white font-semibold bg-blue-500 hover:bg-blue-600 transition-colors;
-  }
-
-  .btn-secondary {
-    @apply px-4 py-2 rounded-lg text-gray-800 font-semibold bg-gray-200 hover:bg-gray-300 transition-colors;
-  }
-
-  .card {
-    @apply p-6 rounded-lg shadow-lg bg-white border border-gray-200;
-  }
-
-  .card-header {
-    @apply text-xl font-bold mb-4;
-  }
-
-  .card-body {
-    @apply text-gray-700;
-  }
-
-  .card-footer {
-    @apply mt-4 flex justify-end;
-  }
-
-  .input-field {
-    @apply border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500;
-  }
-
-  .alert {
-    @apply px-4 py-3 rounded-lg font-medium bg-yellow-100 text-yellow-800 border border-yellow-300;
-  }
-
-  .badge {
-    @apply inline-block px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800;
-  }
-
-  .badge-error {
-    @apply bg-red-100 text-red-800;
-  }
-
-  .badge-warning {
-    @apply bg-yellow-100 text-yellow-800;
-  }
-
-  .badge-info {
-    @apply bg-blue-100 text-blue-800;
-  }
-}

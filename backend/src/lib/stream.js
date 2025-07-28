@@ -27,21 +27,12 @@ export const upsertStreamUser = async (userData) => {
   }
 };
 
-/**
- * Generates a Stream chat token for a user
- * @param {string} userId - The Stream user ID
- * @returns {string} - JWT token
- */
+
 export const generateStreamToken = async (userId) => {
   try {
-    if (!userId) {
-      throw new Error("User ID is required to generate a token");
-    }
-
-    const token = streamClient.createToken(userId);
-    return token;
+    const userIdStr= userId.toString();
+    return token = streamClient.createToken(userIdStr);
   } catch (error) {
     console.error(" Error generating Stream token:", error.message);
-    throw error;
   }
 };

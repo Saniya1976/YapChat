@@ -1,17 +1,13 @@
-// tailwind.config.js
+import daisyui from "daisyui"
+
+/** @type {import('tailwindcss').Config} */
 export default {
-   darkMode: 'class',
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}"
+    "./src/**/*.{js,jsx,ts,tsx,html}",
+    "./public/index.html"
   ],
   theme: {
-    extend: {
-      fontFamily: {
-        'roboto-slab': ['"Roboto Slab"', 'serif'],
-        'winky-rough': ['"Winky Rough"', 'cursive'],
-      },
-    },
+    extend: {},
   },
-  plugins: [],
-};
+  plugins: [daisyui],
+}
