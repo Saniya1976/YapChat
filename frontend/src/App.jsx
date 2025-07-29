@@ -9,11 +9,19 @@ import  Chat  from './pages/Chat.jsx'
 import  Call  from './pages/Call.jsx'
 import  Notifications  from './pages/Notifications.jsx'
 import { Toaster, toast } from 'react-hot-toast'
-
+import { useQuery } from '@tanstack/react-query'
+import {axiosInstance} from './lib/axios.js'
 
 export default function App() {
-  const [data,setData] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['todo'],
+    queryFn: async () => {
+      const res = await axiosInstance.get('/todos/');
+      return res.data;
+    }
+  })
+  console.log(data, isLoading, isError)
+
   return (
     <>
       <Toaster />
@@ -29,5 +37,5 @@ export default function App() {
         </Routes>
       </div>
     </>
-  )
+  );
 }
