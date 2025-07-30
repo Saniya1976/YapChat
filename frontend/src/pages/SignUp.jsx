@@ -1,6 +1,7 @@
 import React from 'react'
 import { ShipWheelIcon } from "lucide-react"
 import { useState } from "react";
+import {Link} from 'react-router-dom'
 
 const SignUp = () => {
   const [signupData, setSignupData] = useState({
@@ -89,6 +90,27 @@ const SignUp = () => {
                       password must be atleast 6 characters long
                     </p>
                   </div>
+                  <div className="form-control">
+                    <label className="label cursor-pointer justify-start gap-2">
+                      <input type="checkbox" className="checkbox checkbox-sm" required />
+                      <span className="text-xs leading-tight">
+                        I agree to the{" "}
+                        <span className="text-primary hover:underline">terms of service</span> and{" "}
+                        <span className="text-primary hover:underline">privacy policy</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                 <button className="btn btn-primary w-full" type="submit">   
+                    Create Account
+                </button>
+               <div className="text-center mt-4">
+                  <p className="text-sm">
+                    Already have an account?{" "}
+                    <Link to="/login" className="text-primary hover:underline">
+                      Sign in
+                    </Link>
+                  </p>
                 </div>
               </div>
             </form>
