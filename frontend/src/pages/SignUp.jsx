@@ -54,6 +54,41 @@ const SignUp = () => {
                       required
                     />
                   </div>
+                  {/*Email*/}
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text">Email</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="daizydoe3@gmail.com"
+                      className="input input-bordered w-full"
+                      value={signupData.email}
+                      onChange={(e) =>
+                        setSignupData({ ...signupData, email: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  {/*Password*/}
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text">Password</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="******"
+                      className="input input-bordered w-full"
+                      value={signupData.password}
+                      onChange={(e) =>
+                        setSignupData({ ...signupData, password: e.target.value })
+                      }
+                      required
+                    />
+                    <p className="text-xs opacity-70 mt-1">
+                      password must be atleast 6 characters long
+                    </p>
+                  </div>
                 </div>
               </div>
             </form>
