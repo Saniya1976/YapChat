@@ -1,4 +1,3 @@
-import React from 'react'
 import { ShipWheelIcon } from "lucide-react"
 import { useState } from "react";
 import {Link} from 'react-router-dom'
@@ -11,7 +10,7 @@ const SignUp = () => {
     password: ""
   });
   const queryClient=useQueryClient()
-   const {mutate:signupMutation,isPending,error}=useMutation({
+   const {mutate:signupMutation,isPending}=useMutation({
     mutationFn:signup,
     onSuccess:()=>queryClient.invalidateQueries({queryKey:['authUser']})
    })
