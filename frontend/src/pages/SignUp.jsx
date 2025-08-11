@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { signup } from "../lib/api.js";
+import useSignUp from "../hooks/useSignUp.js";
+
 
 const SignUp = () => {
   const [signupData, setSignupData] = useState({

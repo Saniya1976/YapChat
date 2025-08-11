@@ -9,27 +9,17 @@ import { connectDB } from './lib/db.js'
 dotenv.config()
 const app = express();
 
+app.use(cookieParser());
+
 app.use(cors({
-  origin: ["http://localhost:5173", "http://127.0.0.1:5174"],
+  origin: ["http://localhost:5173", "http://127.0.0.1:5174", "http://localhost:5174"],
   credentials: true
 }));
-
 app.use(express.json());
 
 connectDB();
-app.use(cookieParser());
-app.get('/api/auth/signup', (req, res) => {
-  res.send('Welcome to the YapChat API')
-})
-app.get('/api/auth/login', (req, res) => {
-  res.send('Login endpoint')
-})
-app.get('/api/auth/logout', (req, res) => {
-  res.send('Logout endpoint')
-})
-app.get('/api/auth/onboard', (req, res) => {
-  res.send('Onboarding endpoint')
-})
+
+
 app.use('/api/auth',authRoutes)
 app.use('/api/users',userRoutes)
 app.use('/api/chat', chatRoutes)

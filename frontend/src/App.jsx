@@ -22,7 +22,7 @@ const App = () => {
   return (
     <>
       <Toaster />
-      <BrowserRouter>
+     
         <div className="min-h-screen" data-theme="coffee">
           <Routes>
             <Route
@@ -68,7 +68,7 @@ const App = () => {
             />
           </Routes>
         </div>
-      </BrowserRouter>
+      
     </>
   );
 };

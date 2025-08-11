@@ -56,31 +56,46 @@ export async function signup(req, res) {
  }
 }
 export async function login(req, res) {
- const {email,password}=req.body;
- try {
-  if(!email || !password){
-    return res.status(400).json({message: 'Email and password are required'});
+  const { email, password } = req.body;
+
+  try {
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Fixed: Make cookie settings consistent with signup
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      sameSite: 'strict',  // Changed from conditional to 'strict'
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    return res.status(200).json({
+      message: "Login successful",
+      user
+    });
+
+  } catch (error) {
+    console.error("Error during login:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-  const user=await User.findOne({email});
-  if(!user){
-    return res.status(400).json({message: 'Invalid email or password'});
-  }
-  const isMatch=await user.comparePassword(password);
-  if(!isMatch){
-    return res.status(400).json({message: 'Invalid email or password'});
-  }
-  const token=jwt.sign({userId:user._id},process.env.JWT_SECRET,{expiresIn:'7d'});
-  res.cookie('jwt', token, {
-    httpOnly: true,
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-  });
-  return res.status(200).json({message: 'Login successful', user});
- } catch (error) {
-  console.error('Error during login:', error);
-  return res.status(500).json({message: 'Internal server error'});
- }
 }
 export async function logout(req, res) {
   try {
