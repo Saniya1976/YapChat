@@ -23,7 +23,7 @@ const App = () => {
     <>
       <Toaster />
      
-        <div className="min-h-screen" data-theme="coffee">
+        <div className="min-h-screen" data-theme="forest">
           <Routes>
             <Route
               path="/"
