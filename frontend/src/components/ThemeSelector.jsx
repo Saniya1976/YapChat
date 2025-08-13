@@ -2,8 +2,11 @@ import React from 'react'
 import { useThemeStore } from '../store/useThemeStore'
 
 const ThemeSelector = () => {
+  const {theme,setTheme}=useThemeStore();
   return (
-    const {theme,setTheme}=useThemeStore();
+    <div className='dropdown dropdown-end'>
+
+    </div>
   )
 }
 
