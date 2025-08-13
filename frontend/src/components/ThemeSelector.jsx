@@ -1,8 +1,9 @@
 import React from 'react'
+import { useThemeStore } from '../store/useThemeStore'
 
 const ThemeSelector = () => {
   return (
-    <div>ThemeSelector</div>
+    const {theme,setTheme}=useThemeStore();
   )
 }
 
