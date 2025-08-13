@@ -14,15 +14,11 @@ export default {
   ],
   daisyui: {
     themes: [
-      "cupcake",
-      "retro",
       "synthwave",
-      "cyberpunk",
       "valentine",
       "halloween",
       "garden",
       "forest",
-      "pastel",
       "fantasy",
       "black",
       "luxury",
@@ -30,7 +26,6 @@ export default {
       "lemonade",
       "night",
       "coffee",
-      "nord",
       "sunset",
     ],
   }

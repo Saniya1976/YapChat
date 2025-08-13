@@ -1,10 +1,33 @@
-import React from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import React, { useState } from 'react'
+import { getOutgoingFriendReqs, getRecommendedUsers, getUserFriends, sendFriendRequest } from '../lib/api.js';
 
 const Home = () => {
+  const queryClient=useQueryClient();
+  const[outgoingRequestsIds,setOutgoingRequestsIds]=useState();
+
+  const{data:friends=[],isLoading:loadingFriends}=useQuery(
+   { queryKey:[friends],
+    queryFn:getUserFriends
+}
+  );
+const{data:recommendedUsers=[],isLoading:loadingUsers}=useQuery(
+   { queryKey:[users],
+    queryFn:getRecommendedUsers
+}
+  );
+  const{data:getOutgoingFriendReqs=[]}=useQuery(
+   { queryKey:[outgoingFriendReqs],
+    queryFn:getOutgoingFriendReqs
+  }
+  );
+  const {mutate:sendRequestMutation,isPending}=useMutation({
+    mutationFn:sendFriendRequest,
+    onSuccess:()=>queryClient.invalidateQueries({queryKey:["outgoingFriendReqs"]})
+  });
   return (
     <div>
-      <h1 className="text-3xl font-bold text-primary">Welcome to the Home Page</h1>
-      <p className="mt-4">This is the main content area.</p>
+    
     </div>
   )
 }
