@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import React, { useEffect, useState } from 'react'
-import {Link} from "react-router"
+import {Link} from "react-router-dom"
 import { getOutgoingFriendReqs,
          getRecommendedUsers,
          getUserFriends,
          sendFriendRequest } from '../lib/api.js';
-import { getLanguageFlag } from '../constants/index.js';
+import { getLanguageFlag } from '../components/FriendCard.jsx';
 import FriendCard from '../components/FriendCard.jsx';
 import { CheckCircleIcon, MapPinIcon, UserPlusIcon, UsersIcon } from "lucide-react";
 import NoFriendsFound from '../components/NoFriendsFound .jsx';
@@ -66,8 +66,14 @@ const Home = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {friends.map((friend) => (
-              <FriendCard key={friend._id} friend={friend} />
-            ))}
+         <FriendCard 
+         key={friend._id} 
+         friend={{
+         ...friend,
+         profilePic: friend.profilePic || '/default-avatar.png'
+    }} 
+  />
+))}
           </div>
         )}
          <section>
