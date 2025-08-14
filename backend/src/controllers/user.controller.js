@@ -6,23 +6,39 @@ import FriendRequest from '../models/FriendRequest.js';
 
 export async function getRecommendedUsers(req,res){
     try {
-       const currentUserId= req.user._id;
-       const currentUser= req.user;
-      const recommendedUsers= await User.find({   
-      $and: [
-          { _id: { $ne: currentUserId } },
-          { _id: { $nin: currentUser.friends } },
-          { isOnboarded: true }
-      ]
-    }).select('-password -__v').limit(10);
-        return res.status(200).json({  recommendedUsers });
+       const currentUserId = req.user._id;
+       const currentUser = req.user;
 
+       const recommendedUsers = await User.find({   
+            $and: [
+                { _id: { $ne: currentUserId } },
+                { _id: { $nin: currentUser.friends } },
+                { isOnboarded: true }
+            ]
+        })
+        .select('-password -__v')
+        .limit(10)
+        .lean();
+
+       const outgoingRequests = await FriendRequest.find({
+           sender: currentUserId,
+           status: 'pending'
+       }).select('recipient');
+
+       const outgoingSet = new Set(outgoingRequests.map(r => r.recipient.toString()));
+
+       const finalUsers = recommendedUsers.map(u => ({
+           ...u,
+           requestSent: outgoingSet.has(u._id.toString())
+       }));
+
+       return res.status(200).json({ recommendedUsers: finalUsers });
     } catch (error) {
         console.error('Error fetching recommended users:', error);
-        return res.status(500).json({message: 'Internal server error'});
-        
+        return res.status(500).json({ message: 'Internal server error' });
     }
 }
+
 
 export async function getMyFriends(req,res){
 try {

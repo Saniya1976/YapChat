@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShipWheelIcon } from "lucide-react";
+import { ShipWheelIcon,EyeIcon, EyeOffIcon } from "lucide-react";
 import { Link } from "react-router";
 import useLogin from "../hooks/useLogin";
 
@@ -8,19 +8,8 @@ const Login = () => {
     email: "",
     password: "",
   });
-
-  // This is how we did it at first, without using our custom hook
-  // const queryClient = useQueryClient();
-  // const {
-  //   mutate: loginMutation,
-  //   isPending,
-  //   error,
-  // } = useMutation({
-  //   mutationFn: login,
-  //   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["authUser"] }),
-  // });
-
-  // This is how we did it using our custom hook - optimized version
+const [showPassword, setShowPassword] = useState(false);
+ 
   const { isPending, error, loginMutation } = useLogin();
 
   const handleLogin = (e) => {
@@ -76,19 +65,33 @@ const Login = () => {
                   />
                 </div>
 
-                <div className="form-control w-full space-y-2">
-                  <label className="label">
-                    <span className="label-text">Password</span>
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    className="input input-bordered w-full"
-                    value={loginData.password}
-                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                    required
-                  />
-                </div>
+               {/* PASSWORD */}
+<div className="form-control w-full space-y-2">
+  <label className="label">
+    <span className="label-text">Password</span>
+  </label>
+  <div className="relative">
+    <input
+      type={showPassword ? "text" : "password"}
+      placeholder="••••••••"
+      className="input input-bordered w-full pr-10"
+      value={loginData.password}
+      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+      required
+    />
+    <button
+      type="button"
+      className="absolute inset-y-0 right-3 flex items-center text-gray-500"
+      onClick={() => setShowPassword((prev) => !prev)}
+    >
+      {showPassword ? (
+        <EyeOffIcon className="w-5 h-5" />
+      ) : (
+        <EyeIcon className="w-5 h-5" />
+      )}
+    </button>
+  </div>
+</div>
 
                 <button type="submit" className="btn btn-primary w-full" disabled={isPending}>
                   {isPending ? (

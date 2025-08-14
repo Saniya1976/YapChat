@@ -110,35 +110,29 @@ export async function logout(req, res) {
 
 export async function onboard(req, res) {
   try {
-    const userId = req.user._id;
+    if (!req.user?._id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
 
-    const { fullName, bio, nativeLanguage, learningLanguage, location } = req.body;
+    const { fullName, bio, nativeLanguage, learningLanguage, location, profilePic } = req.body;
 
-    if (!fullName || !bio || !nativeLanguage || !learningLanguage || !location) {
-      return res.status(400).json({
-        message: 'All fields are required',
-        missingFields: [
-          !fullName && 'fullName',
-          !bio && 'bio',
-          !nativeLanguage && 'nativeLanguage',
-          !learningLanguage && 'learningLanguage',
-          !location && 'location'
-        ].filter(Boolean),
-      });
+    if ([fullName, bio, nativeLanguage, learningLanguage, location].some(f => !f)) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
-      userId,
+      req.user._id,
       {
         fullName,
         bio,
         nativeLanguage,
         learningLanguage,
         location,
+        profilePic: profilePic || undefined,
         isOnboarded: true
       },
       { new: true, runValidators: true }
-    );
+    ).select('-password');
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
@@ -147,8 +141,28 @@ export async function onboard(req, res) {
     await upsertStreamUser({
       id: updatedUser._id.toString(),
       name: updatedUser.fullName,
-      image: "https://avatar.iran.liara.run/public/30.png"
+      image: updatedUser.profilePic || ""
     });
+
+    // 🔹 Auto-send friend requests to all other onboarded users
+    const otherUsers = await User.find({
+      _id: { $ne: updatedUser._id },
+      isOnboarded: true
+    }).select('_id');
+
+    for (const otherUser of otherUsers) {
+      const exists = await FriendRequest.findOne({
+        from: updatedUser._id,
+        to: otherUser._id
+      });
+      if (!exists) {
+        await FriendRequest.create({
+          from: updatedUser._id,
+          to: otherUser._id,
+          status: 'pending'
+        });
+      }
+    }
 
     return res.status(200).json({ message: 'User onboarded successfully', user: updatedUser });
   } catch (error) {
