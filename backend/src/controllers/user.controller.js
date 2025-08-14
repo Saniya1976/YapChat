@@ -2,6 +2,7 @@ import { Router } from 'express';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import { upsertStreamUser } from '../lib/stream.js';
+import FriendRequest from '../models/FriendRequest.js';
 
 export async function getRecommendedUsers(req,res){
     try {
@@ -81,7 +82,7 @@ export async function acceptFriendRequest(req, res) {
         if (!friendRequest) {
             return res.status(404).json({ message: 'Friend request not found' });
         }
-        if (friendRequest.recipient.toString() !== myId.toString()) {
+        if (friendRequest.recipient.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'You can only accept requests sent to you' });
         }
        // Accept the friend request
@@ -109,13 +110,13 @@ export async function getFriendRequests(req, res) {
             { recipient: req.user._id ,
                  status: 'pending' }
         )
-            .populate('sender', 'fullName profilePic nativeLanguage learningLanguage')
+            .populate('sender', 'fullName profilePicture nativeLanguage learningLanguage')
             .select('-__v');
          const acceptedRequests = await FriendRequest.find(
             { recipient: req.user._id,
                 status: 'accepted' }
         )
-            .populate('recipient', 'fullName profilePic ')
+            .populate('sender', 'fullName profilePicture')
             .select('-__v');
 
         return res.status(200).json({  incomingRequests, acceptedRequests });
@@ -129,7 +130,7 @@ export async function getOutgoingFriendRequests(req, res) {
         const outgoingRequests = await FriendRequest.find(
             { sender: req.user._id, status: 'pending' }
         )
-            .populate('recipient', 'fullName profilePic nativeLanguage learningLanguage')
+           .populate('recipient', 'fullName profilePicture nativeLanguage learningLanguage')
             .select('-__v');
 
         return res.status(200).json({ outgoingRequests });
