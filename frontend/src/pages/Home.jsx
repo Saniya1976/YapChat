@@ -5,6 +5,7 @@ import { getOutgoingFriendReqs,
          getRecommendedUsers,
          getUserFriends,
          sendFriendRequest } from '../lib/api.js';
+import { getLanguageFlag } from '../constants/index.js';
 import FriendCard from '../components/FriendCard.jsx';
 import { CheckCircleIcon, MapPinIcon, UserPlusIcon, UsersIcon } from "lucide-react";
 import NoFriendsFound from '../components/NoFriendsFound .jsx';
@@ -24,7 +25,7 @@ const Home = () => {
     queryKey: ["users"],
     queryFn: getRecommendedUsers
   });
-  const recommendedUsers = recommendedUsersData.users || []; // If this also has nested structure
+  const recommendedUsers = recommendedUsersData.recommendedUsers || []; // If this also has nested structure
 
   const { data: outgoingFriendReqs = [] } = useQuery({
     queryKey: ['outgoingFriendReqs'],
@@ -93,11 +94,12 @@ const Home = () => {
             </div>
           ):(
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendedUsers.map((user)=>{
+             
+               {recommendedUsers.map((user) => {
                 const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
-              })}
+    
               return (
-                <div key={user.id}
+                <div key={user._id}
                  className="card bg-base-200 hover:shadow-lg transition-all duration-300">
                    <div className="card-body p-5 space-y-4">
                       <div className="flex items-center gap-3">
@@ -154,6 +156,7 @@ const Home = () => {
                    </div>
                </div>
               )
+            })}
             </div>
           )}
          </section>

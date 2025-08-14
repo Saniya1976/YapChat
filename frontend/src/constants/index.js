@@ -100,3 +100,16 @@ export const LANGUAGE_TO_FLAG = {
   turkish: "tr",
   dutch: "nl",
 };
+
+export const getLanguageFlag = (languageCode) => {
+  if (!languageCode) return '🌐';
+  return LANGUAGE_TO_FLAG[languageCode.toLowerCase()] || '🌐';
+};
+export const capitalize = (str) => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+export const getLanguageName = (code) => {
+  const lang = LANGUAGES.find(l => l.code === code);
+  return lang ? lang.name : code;
+};
