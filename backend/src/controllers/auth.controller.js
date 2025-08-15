@@ -2,7 +2,7 @@ import { Router } from 'express';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import { upsertStreamUser } from '../lib/stream.js';
-
+import FriendRequest from '../models/FriendRequest.js';
 
 export async function signup(req, res) {
  const {fullName,email,password} = req.body;
@@ -144,7 +144,7 @@ export async function onboard(req, res) {
       image: updatedUser.profilePic || ""
     });
 
-    // 🔹 Auto-send friend requests to all other onboarded users
+    // 🔹 Fixed auto-send friend requests
     const otherUsers = await User.find({
       _id: { $ne: updatedUser._id },
       isOnboarded: true
@@ -152,13 +152,16 @@ export async function onboard(req, res) {
 
     for (const otherUser of otherUsers) {
       const exists = await FriendRequest.findOne({
-        from: updatedUser._id,
-        to: otherUser._id
+        $or: [
+          { sender: updatedUser._id, recipient: otherUser._id },
+          { sender: otherUser._id, recipient: updatedUser._id }
+        ]
       });
+      
       if (!exists) {
         await FriendRequest.create({
-          from: updatedUser._id,
-          to: otherUser._id,
+          sender: updatedUser._id,    // Changed from 'from'
+          recipient: otherUser._id,   // Changed from 'to'
           status: 'pending'
         });
       }
