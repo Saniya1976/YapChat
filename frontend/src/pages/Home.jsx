@@ -15,6 +15,13 @@ import NoFriendsFound from '../components/NoFriendsFound .jsx';
 const Home = () => {
   const queryClient = useQueryClient();
   const [outgoingRequestsIds, setOutgoingRequestsIds] = useState(new Set());
+  const [pendingRequests, setPendingRequests] = useState(new Set()); // Track individual button loading
+
+  // Clear any cached data on mount to prevent stale data issues
+  useEffect(() => {
+    setOutgoingRequestsIds(new Set());
+    setPendingRequests(new Set());
+  }, []);
 
   // Friends Query
   const { data: friendsData = {}, isLoading: loadingFriends } = useQuery({
@@ -33,35 +40,141 @@ const Home = () => {
   // Outgoing Friend Requests Query
   const { data: outgoingFriendReqs = [] } = useQuery({
     queryKey: ['outgoingFriendReqs'],
-    queryFn: getOutgoingFriendReqs
+    queryFn: getOutgoingFriendReqs,
+    staleTime: 0, // Always refetch
+    cacheTime: 0, // Don't cache
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window gets focus
   });
 
   // Send Friend Request Mutation
-  const { mutate: sendRequestMutation, isPending } = useMutation({
-    mutationFn: sendFriendRequest,
-    onSuccess: (_, userId) => {
-      // Update local state instantly
-      setOutgoingRequestsIds((prev) => new Set(prev).add(userId));
-
-      // Refetch updated data from backend
+  const { mutate: sendRequestMutation, isPending, error } = useMutation({
+    mutationFn: (userId) => sendFriendRequest(userId),
+    onMutate: async (userId) => {
+      // Add to pending requests for this specific button
+      setPendingRequests((prev) => new Set(prev).add(userId));
+      
+      // Optimistically add the user ID to pending requests
+      setOutgoingRequestsIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(userId);
+        return newSet;
+      });
+    },
+    onSuccess: (data, userId) => {
+      // Remove from pending requests
+      setPendingRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+      
+      // Refetch to sync with backend
       queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (error) => {
-      console.error("Failed to send friend request:", error);
-      // Optional: show a toast here
+    onError: (error, userId) => {
+      console.error('Friend request failed:', {
+        userId,
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message,
+        fullError: error.response?.data
+      });
+      
+      // Check for specific error types
+      const errorMessage = error.response?.data?.message?.toLowerCase() || '';
+      const isAlreadyExists = errorMessage.includes('already exists') || 
+                            errorMessage.includes('already sent') ||
+                            errorMessage.includes('duplicate');
+      
+      const isSelfRequest = errorMessage.includes('cannot send friend request to yourself') ||
+                           errorMessage.includes('self');
+      
+      // Always remove from pending requests
+      setPendingRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+      
+      // If it's already exists error, keep it in the outgoing requests
+      // If it's any other error (like self-request, validation error, etc.), remove it
+      if (!isAlreadyExists) {
+        setOutgoingRequestsIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
+      }
+      
+      // You could also show a toast notification here
+      // For example: toast.error(error.response?.data?.message || 'Failed to send friend request');
     }
   });
 
   // Populate outgoingRequestsIds from server
   useEffect(() => {
+    console.log('🔍 Raw outgoingFriendReqs data:', outgoingFriendReqs);
+    
     const outgoingIds = new Set();
-    if (outgoingFriendReqs && outgoingFriendReqs.length > 0) {
-      outgoingFriendReqs.forEach((req) => {
-        outgoingIds.add(req.recipient._id);
-      });
-      setOutgoingRequestsIds(outgoingIds);
+    
+    // Handle both possible data structures
+    let requestsArray = [];
+    if (Array.isArray(outgoingFriendReqs)) {
+      requestsArray = outgoingFriendReqs;
+      console.log('📋 Using direct array structure');
+    } else if (outgoingFriendReqs?.outgoingRequests && Array.isArray(outgoingFriendReqs.outgoingRequests)) {
+      requestsArray = outgoingFriendReqs.outgoingRequests;
+      console.log('📋 Using outgoingRequests property');
+    } else if (outgoingFriendReqs?.outgoingReqs && Array.isArray(outgoingFriendReqs.outgoingReqs)) {
+      requestsArray = outgoingFriendReqs.outgoingReqs;
+      console.log('📋 Using outgoingReqs property');
     }
+    
+    console.log('📋 Requests array to process:', requestsArray);
+    
+    if (requestsArray.length > 0) {
+      requestsArray.forEach((req, index) => {
+        console.log(`📋 Processing request ${index}:`, req);
+        
+        // Handle different possible structures
+        const recipientId = req.recipient?._id || 
+                           req.recipient || 
+                           req.to?._id || 
+                           req.to ||
+                           req.recipientId ||
+                           req.userId;
+        
+        console.log(`📋 Extracted recipient ID: ${recipientId}`);
+        
+        if (recipientId) {
+          outgoingIds.add(recipientId);
+        }
+      });
+    }
+    
+    console.log('📋 Final outgoing IDs set:', Array.from(outgoingIds));
+    
+    // Only update if the Set contents have actually changed
+    setOutgoingRequestsIds(prevIds => {
+      // Convert both sets to arrays and compare
+      const prevArray = Array.from(prevIds).sort();
+      const newArray = Array.from(outgoingIds).sort();
+      
+      console.log('📋 Previous IDs:', prevArray);
+      console.log('📋 New IDs:', newArray);
+      
+      // Check if they're different
+      if (prevArray.length !== newArray.length || 
+          !prevArray.every((id, index) => id === newArray[index])) {
+        console.log('📋 Updating outgoingRequestsIds state');
+        return outgoingIds;
+      }
+      
+      console.log('📋 No change needed, keeping previous state');
+      // Return previous state if no change
+      return prevIds;
+    });
   }, [outgoingFriendReqs]);
 
   return (
@@ -116,13 +229,13 @@ const Home = () => {
 
         {/* Recommended Users Section */}
         <section className="space-y-8">
-          <div className="backdrop-blur-sm bg-base-100/70 rounded-2xl p-6 border border-base-300 shadow-lg">
+          <div className="backdrop-blur-sm bg-base-100/70 rounded-xl p-4 border border-base-300 shadow-md">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
                   Meet New Learners
                 </h2>
-                <p className="text-base-content/70 mt-2 text-lg">
+                <p className="text-base-content/70 text-sm">
                   Discover perfect language exchange partners based on your profile
                 </p>
               </div>
@@ -152,6 +265,15 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {recommendedUsers.map((user) => {
                 const hasRequestBeenSent = outgoingRequestsIds.has(user._id);
+                const isThisButtonPending = pendingRequests.has(user._id);
+                const hasError = error?.response?.data?.userId === user._id;
+
+                // Debug logging for each user
+                console.log(`👤 User ${user.fullName} (${user._id}):`);
+                console.log(`  - Has request been sent: ${hasRequestBeenSent}`);
+                console.log(`  - Is pending: ${isThisButtonPending}`);
+                console.log(`  - Has error: ${hasError}`);
+                console.log(`  - Current outgoing IDs:`, Array.from(outgoingRequestsIds));
 
                 return (
                   <div 
@@ -201,23 +323,44 @@ const Home = () => {
                         className={`btn w-full mt-2 transition-all duration-300 ${
                           hasRequestBeenSent 
                             ? "btn-success btn-disabled shadow-md" 
+                            : hasError
+                            ? "btn-error hover:btn-error-focus hover:scale-105 shadow-lg hover:shadow-xl"
                             : "btn-primary hover:btn-primary-focus hover:scale-105 shadow-lg hover:shadow-xl"
                         }`}
-                        onClick={() => sendRequestMutation(user._id)}
-                        disabled={hasRequestBeenSent || isPending}
+                        onClick={() => {
+                          if (!hasRequestBeenSent) {
+                            sendRequestMutation(user._id);
+                          }
+                        }}
+                        disabled={hasRequestBeenSent || isThisButtonPending}
                       >
                         {hasRequestBeenSent ? (
                           <>
                             <CheckCircleIcon className="size-4 mr-2" />
                             Request Sent
                           </>
+                        ) : hasError ? (
+                          <>
+                            <UserPlusIcon className="size-4 mr-2" />
+                            Try Again
+                          </>
                         ) : (
                           <>
                             <UserPlusIcon className="size-4 mr-2" />
-                            {isPending ? "Sending..." : "Send Friend Request"}
+                            {isThisButtonPending ? "Sending..." : "Send Friend Request"}
                           </>
                         )}
                       </button>
+
+                      {/* Debug Info - Remove this in production
+                      {process.env.NODE_ENV === 'development' && (
+                        <div className="text-xs bg-base-300 p-2 rounded mt-2">
+                          <div>User ID: {user._id}</div>
+                          <div>Has Request: {hasRequestBeenSent ? 'Yes' : 'No'}</div>
+                          <div>Is Pending: {isThisButtonPending ? 'Yes' : 'No'}</div>
+                          <div>In Outgoing Set: {outgoingRequestsIds.has(user._id) ? 'Yes' : 'No'}</div>
+                        </div> */}
+                      {/* )} */}
                     </div>
                   </div>
                 )

@@ -161,16 +161,21 @@ export async function getFriendRequests(req, res) {
         .populate('sender recipient', 'fullName profilePic')
         .select('-__v');
 
+        // Minimal fix: Filter out requests with null senders/recipients
+        const filteredIncoming = incomingRequests.filter(req => req.sender != null);
+        const filteredAccepted = acceptedRequests.filter(req => 
+            req.sender != null && req.recipient != null
+        );
+
         return res.status(200).json({ 
-            incomingReqs: incomingRequests,  // Consistent naming with frontend
-            acceptedReqs: acceptedRequests  // Consistent naming with frontend
+            incomingReqs: filteredIncoming,
+            acceptedReqs: filteredAccepted
         });
     } catch (error) {
         console.error('Error fetching friend requests:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
-
 export async function getOutgoingFriendRequests(req, res) {
     try {
         const outgoingRequests = await FriendRequest.find({

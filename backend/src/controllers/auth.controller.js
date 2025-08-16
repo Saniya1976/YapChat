@@ -144,30 +144,10 @@ export async function onboard(req, res) {
       image: updatedUser.profilePic || ""
     });
 
-    // 🔹 Fixed auto-send friend requests
-    const otherUsers = await User.find({
-      _id: { $ne: updatedUser._id },
-      isOnboarded: true
-    }).select('_id');
-
-    for (const otherUser of otherUsers) {
-      const exists = await FriendRequest.findOne({
-        $or: [
-          { sender: updatedUser._id, recipient: otherUser._id },
-          { sender: otherUser._id, recipient: updatedUser._id }
-        ]
-      });
-      
-      if (!exists) {
-        await FriendRequest.create({
-          sender: updatedUser._id,    // Changed from 'from'
-          recipient: otherUser._id,   // Changed from 'to'
-          status: 'pending'
-        });
-      }
-    }
-
-    return res.status(200).json({ message: 'User onboarded successfully', user: updatedUser });
+    return res.status(200).json({ 
+      message: 'User onboarded successfully', 
+      user: updatedUser 
+    });
   } catch (error) {
     console.error('Error during onboarding:', error);
     return res.status(500).json({ message: 'Internal server error' });
