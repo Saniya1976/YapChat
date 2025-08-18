@@ -58,46 +58,7 @@ export async function acceptFriendRequest(requestId) {
   const response = await axiosInstance.put(`/users/friend-request/${requestId}/accept`);
   return response.data;
 }
-// export const getStreamToken = async () => {
-//   const response = await fetch("/api/get-stream-token", {
-//     credentials: "include", // Send cookies
-//   });
-//   if (!response.ok) throw new Error("Failed to fetch token");
-//   return response.json();
-// };
-
-export const getStreamToken = async () => {
-  console.log('🔑 Requesting token from /api/get-stream-token');
-  
-  try {
-    const response = await fetch("/api/get-stream-token", {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    
-    console.log('🔑 Response status:', response.status);
-    console.log('🔑 Response ok:', response.ok);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('🔑 Error response:', errorText);
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
-    
-    const data = await response.json();
-    console.log('🔑 Token data received:', data);
-    
-    // Validate response structure
-    if (!data.token) {
-      throw new Error('Invalid response: missing token field');
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('🔑 Token fetch error:', error);
-    throw error;
-  }
-};
+export async function getStreamToken() {
+  const response = await axiosInstance.get("/chat/token");
+  return response.data;
+}
