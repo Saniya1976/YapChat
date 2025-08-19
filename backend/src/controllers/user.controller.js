@@ -56,19 +56,33 @@ export async function sendFriendRequest(req, res) {
         const myId = req.user._id;
         const { id: recipientId } = req.params; 
 
+        console.log("Friend request attempt:", { from: myId, to: recipientId });
+
         // Prevent sending friend request to self
         if (myId.toString() === recipientId) {
-            return res.status(400).json({ message: 'You cannot send a friend request to yourself' });
+            return res.status(400).json({ 
+                message: 'You cannot send a friend request to yourself',
+                code: 'SELF_REQUEST',
+                userId: recipientId
+            });
         }
 
         const recipient = await User.findById(recipientId);
         if (!recipient) {
-            return res.status(404).json({ message: 'Recipient not found' });
+            return res.status(404).json({ 
+                message: 'Recipient not found',
+                code: 'USER_NOT_FOUND',
+                userId: recipientId
+            });
         }
 
         // Check if already friends
         if (recipient.friends.includes(myId)) {
-            return res.status(400).json({ message: 'You are already friends with this user' });
+            return res.status(400).json({ 
+                message: 'You are already friends with this user',
+                code: 'ALREADY_FRIENDS',
+                userId: recipientId
+            });
         }
 
         // Check if friend request already exists
@@ -80,7 +94,13 @@ export async function sendFriendRequest(req, res) {
         });
 
         if (existingRequest) {
-            return res.status(400).json({ message: 'Friend request already exists' });
+            return res.status(400).json({ 
+                message: 'Friend request already exists',
+                code: 'REQUEST_EXISTS',
+                userId: recipientId,
+                requestId: existingRequest._id,
+                status: existingRequest.status
+            });
         }
 
         // Create new friend request
@@ -89,6 +109,8 @@ export async function sendFriendRequest(req, res) {
             recipient: recipientId,
             status: 'pending'
         });
+
+        console.log("Friend request created successfully:", newRequest._id);
 
         return res.status(201).json({ 
             message: 'Friend request sent', 
@@ -101,10 +123,12 @@ export async function sendFriendRequest(req, res) {
         });
     } catch (error) {
         console.error('Error sending friend request:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({ 
+            message: 'Internal server error',
+            error: error.message 
+        });
     }
 }
-
 export async function acceptFriendRequest(req, res) {
     try {
         const { id: requestId } = req.params;

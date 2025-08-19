@@ -1,4 +1,3 @@
-import axios from "axios";
 import { axiosInstance } from "./axios";
 
 export const signup = async (signupData) => {
@@ -10,6 +9,7 @@ export const login = async (loginData) => {
   const response = await axiosInstance.post("/auth/login", loginData);
   return response.data;
 };
+
 export const logout = async () => {
   const response = await axiosInstance.post("/auth/logout");
   return response.data;
@@ -17,8 +17,8 @@ export const logout = async () => {
 
 export const getAuthUser = async () => {
   try {
-    const res = await axiosInstance.get("/auth/me");
-    return res.data;
+    const response = await axiosInstance.get("/auth/me");
+    return response.data;
   } catch (error) {
     console.log("Error in getAuthUser:", error);
     return null;
@@ -36,7 +36,7 @@ export async function getUserFriends() {
 }
 
 export async function getRecommendedUsers() {
-  const response = await axiosInstance.get("/users");
+  const response = await axiosInstance.get("/users"); // Fixed endpoint
   return response.data;
 }
 
@@ -46,18 +46,25 @@ export async function getOutgoingFriendReqs() {
 }
 
 export async function sendFriendRequest(userId) {
-  const response = await axiosInstance.post(`/users/friend-request/${userId}`);
-  return response.data;
+  try {
+    const response = await axiosInstance.post(`/users/friend-request/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error sending friend request:", error.response?.data);
+    throw error; // Re-throw to handle in the UI
+  }
 }
 
 export async function getFriendRequests() {
-  const response=await axiosInstance.get("/users/friend-requests");
+  const response = await axiosInstance.get("/users/friend-requests");
   return response.data;
 }
+
 export async function acceptFriendRequest(requestId) {
-  const response = await axiosInstance.put(`/users/friend-request/${requestId}/accept`);
+  const response = await axiosInstance.post(`/users/friend-request/accept/${requestId}`); // Fixed method
   return response.data;
 }
+
 export async function getStreamToken() {
   const response = await axiosInstance.get("/chat/token");
   return response.data;
