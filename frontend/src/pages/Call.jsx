@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom' // Added useNavigate import
 import useAuthUser from '../hooks/useAuthUser';
 import { getStreamToken } from '../lib/api.js';
 import { useQuery } from '@tanstack/react-query';
@@ -21,45 +21,70 @@ import PageLoader from "../components/PageLoader.jsx";
 const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
 
 const Call = () => {
-  const{id:callId}=useParams();
-  const[client,setClient]=useState(null);
-  const[call,setCall]=useState(null);
-  const[isConnecting,setIsConnecting]=useState(false);
+  const {id: callId} = useParams();
+  const [client, setClient] = useState(null);
+  const [call, setCall] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(false);
 
-  const{authUser,isLoading}=useAuthUser();
-  const{data:tokenData}=useQuery({
-    queryKey:['stream-token'],
-    queryFn:getStreamToken,
-    enabled:!!authUser
-  })
-  useEffect(()=>{
-    const initCall=async ()=>{
-      if(!tokenData?.token || !authUser || !callId) return;
+  const {authUser, isLoading} = useAuthUser();
+  const {data: tokenData} = useQuery({
+    queryKey: ['stream-token'],
+    queryFn: getStreamToken,
+    enabled: !!authUser
+  });
+  
+  useEffect(() => {
+    const initCall = async () => {
+      if (!tokenData?.token || !authUser || !callId) return;
+      
+      setIsConnecting(true);
       try {
-        const user={
-        id:authUser._id,
-        name:authUser.fullName,
-        image:authUser.profilePic,
-      }
-      const videoClient=new StreamVideoClient(STREAM_API_KEY, tokenData.token);
-      const callInstance=new videoClient.call("default", callId);
-      await callInstance.join({create:true})
-      console.log("joined Successfully");
-      setClient(videoClient);
-      setCall(callInstance);
-        console.log(" Initializing Stream Video Client....")
+        const user = {
+          id: authUser._id,
+          name: authUser.fullName,
+          image: authUser.profilePic,
+        };
+        
+        const videoClient = new StreamVideoClient({
+          apiKey: STREAM_API_KEY,
+          user,
+          token: tokenData.token,
+        });
+        
+        const callInstance = videoClient.call("default", callId);
+        await callInstance.join({ create: true });
+        
+        console.log("Joined Successfully");
+        setClient(videoClient);
+        setCall(callInstance);
       } catch (error) {
         console.error("Error initializing stream video:", error);
         toast.error("Failed to initialize call. Please try again later.");
-      }finally{
+      } finally {
         setIsConnecting(false);
       }
-    }
-    initCall()
-  }, [tokenData, authUser, callId])
+    };
+    
+    initCall();
+    
+    // Cleanup function
+    return () => {
+      if (call) {
+        call.leave().catch(console.error);
+      }
+      if (client) {
+        client.disconnectUser().catch(console.error);
+      }
+    };
+  }, [tokenData, authUser, callId]);
+
+  if (isLoading || isConnecting) {
+    return <PageLoader />;
+  }
+
   return (
     <div className="h-screen flex flex-col items-center justify-center">
-      <div className="relative">
+      <div className="relative w-full h-full">
         {client && call ? (
           <StreamVideo client={client}>
             <StreamCall call={call}>
@@ -75,21 +100,24 @@ const Call = () => {
     </div>
   );
 };
+
 const CallContent = () => {
   const { useCallCallingState } = useCallStateHooks();
   const callingState = useCallCallingState();
+  const navigate = useNavigate(); // Moved inside the component
 
-  const navigate = useNavigate();
-
-  if (callingState === CallingState.LEFT) return navigate("/");
+  useEffect(() => {
+    if (callingState === CallingState.LEFT) {
+      navigate("/");
+    }
+  }, [callingState, navigate]);
 
   return (
     <StreamTheme>
       <SpeakerLayout />
-      <CallControls />
+      <CallControls onLeave={() => navigate("/")} />
     </StreamTheme>
   );
 };
 
 export default Call;
-

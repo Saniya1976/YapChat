@@ -85,7 +85,7 @@ export async function sendFriendRequest(req, res) {
             });
         }
 
-        // Check if friend request already exists
+        // Check if friend request already exists (any status)
         const existingRequest = await FriendRequest.findOne({
             $or: [
                 { sender: myId, recipient: recipientId },
@@ -94,13 +94,19 @@ export async function sendFriendRequest(req, res) {
         });
 
         if (existingRequest) {
-            return res.status(400).json({ 
-                message: 'Friend request already exists',
-                code: 'REQUEST_EXISTS',
-                userId: recipientId,
-                requestId: existingRequest._id,
-                status: existingRequest.status
-            });
+            // If there's a rejected request, allow creating a new one
+            if (existingRequest.status === 'rejected') {
+                // Delete the old rejected request and create a new one
+                await FriendRequest.findByIdAndDelete(existingRequest._id);
+            } else {
+                return res.status(400).json({ 
+                    message: 'Friend request already exists',
+                    code: 'REQUEST_EXISTS',
+                    userId: recipientId,
+                    requestId: existingRequest._id,
+                    status: existingRequest.status
+                });
+            }
         }
 
         // Create new friend request
@@ -114,6 +120,7 @@ export async function sendFriendRequest(req, res) {
 
         return res.status(201).json({ 
             message: 'Friend request sent', 
+            success: true,
             request: {
                 _id: newRequest._id,
                 sender: myId,
@@ -125,45 +132,90 @@ export async function sendFriendRequest(req, res) {
         console.error('Error sending friend request:', error);
         return res.status(500).json({ 
             message: 'Internal server error',
+            success: false,
             error: error.message 
         });
     }
 }
+
 export async function acceptFriendRequest(req, res) {
     try {
         const { id: requestId } = req.params;
+        const currentUserId = req.user._id;
+
+        console.log("Accepting friend request:", { requestId, currentUserId });
 
         const friendRequest = await FriendRequest.findById(requestId);
         if (!friendRequest) {
-            return res.status(404).json({ message: 'Friend request not found' });
+            return res.status(404).json({ 
+                message: 'Friend request not found',
+                success: false 
+            });
         }
 
-        if (friendRequest.recipient.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: 'You can only accept requests sent to you' });
+        if (friendRequest.recipient.toString() !== currentUserId.toString()) {
+            return res.status(403).json({ 
+                message: 'You can only accept requests sent to you',
+                success: false 
+            });
         }
 
-        // Accept the friend request
-        friendRequest.status = 'accepted';
-        await friendRequest.save();
+        if (friendRequest.status !== 'pending') {
+            return res.status(400).json({ 
+                message: `Friend request already ${friendRequest.status}`,
+                success: false 
+            });
+        }
 
-        // Add users to each other's friends list
-        await User.findByIdAndUpdate(
-            friendRequest.sender,
-            { $addToSet: { friends: friendRequest.recipient } }
-        );
+        // Use a transaction to ensure atomicity
+        const session = await User.startSession();
         
-        await User.findByIdAndUpdate(
-            friendRequest.recipient,
-            { $addToSet: { friends: friendRequest.sender } }
-        );
+        try {
+            await session.withTransaction(async () => {
+                // Accept the friend request
+                await FriendRequest.findByIdAndUpdate(
+                    requestId,
+                    { status: 'accepted' },
+                    { session }
+                );
 
-        return res.status(200).json({ 
-            message: 'Friend request accepted',
-            updatedRequest: friendRequest
-        });
+                // Add users to each other's friends list using $addToSet to prevent duplicates
+                await User.findByIdAndUpdate(
+                    friendRequest.sender,
+                    { $addToSet: { friends: friendRequest.recipient } },
+                    { session }
+                );
+                
+                await User.findByIdAndUpdate(
+                    friendRequest.recipient,
+                    { $addToSet: { friends: friendRequest.sender } },
+                    { session }
+                );
+            });
+
+            console.log("Friend request accepted successfully:", requestId);
+
+            // Fetch the updated friend request with populated user data
+            const updatedRequest = await FriendRequest.findById(requestId)
+                .populate('sender recipient', 'fullName profilePic nativeLanguage learningLanguage');
+
+            return res.status(200).json({ 
+                message: 'Friend request accepted',
+                success: true,
+                updatedRequest: updatedRequest
+            });
+
+        } finally {
+            await session.endSession();
+        }
+
     } catch (error) {
         console.error('Error accepting friend request:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({ 
+            message: 'Internal server error',
+            success: false,
+            error: error.message 
+        });
     }
 }
 
@@ -174,7 +226,8 @@ export async function getFriendRequests(req, res) {
             status: 'pending'
         })
         .populate('sender', 'fullName profilePic nativeLanguage learningLanguage')
-        .select('-__v');
+        .select('-__v')
+        .sort({ createdAt: -1 }); // Sort by newest first
 
         const acceptedRequests = await FriendRequest.find({
             $or: [
@@ -183,9 +236,10 @@ export async function getFriendRequests(req, res) {
             ]
         })
         .populate('sender recipient', 'fullName profilePic')
-        .select('-__v');
+        .select('-__v')
+        .sort({ updatedAt: -1 }); // Sort by most recently updated
 
-        // Minimal fix: Filter out requests with null senders/recipients
+        // Filter out requests with null senders/recipients
         const filteredIncoming = incomingRequests.filter(req => req.sender != null);
         const filteredAccepted = acceptedRequests.filter(req => 
             req.sender != null && req.recipient != null
@@ -200,6 +254,7 @@ export async function getFriendRequests(req, res) {
         return res.status(500).json({ message: 'Internal server error' });
     }
 }
+
 export async function getOutgoingFriendRequests(req, res) {
     try {
         const outgoingRequests = await FriendRequest.find({
@@ -207,11 +262,109 @@ export async function getOutgoingFriendRequests(req, res) {
             status: 'pending'
         })
         .populate('recipient', 'fullName profilePic nativeLanguage learningLanguage')
-        .select('-__v');
+        .select('-__v')
+        .sort({ createdAt: -1 }); // Sort by newest first
 
-        return res.status(200).json({ outgoingRequests });
+        // Filter out requests with null recipients
+        const filteredOutgoing = outgoingRequests.filter(req => req.recipient != null);
+
+        return res.status(200).json({ 
+            outgoingRequests: filteredOutgoing
+        });
     } catch (error) {
         console.error('Error fetching outgoing friend requests:', error);
         return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+// Additional helper function to reject friend requests
+export async function rejectFriendRequest(req, res) {
+    try {
+        const { id: requestId } = req.params;
+        const currentUserId = req.user._id;
+
+        const friendRequest = await FriendRequest.findById(requestId);
+        if (!friendRequest) {
+            return res.status(404).json({ 
+                message: 'Friend request not found',
+                success: false 
+            });
+        }
+
+        if (friendRequest.recipient.toString() !== currentUserId.toString()) {
+            return res.status(403).json({ 
+                message: 'You can only reject requests sent to you',
+                success: false 
+            });
+        }
+
+        if (friendRequest.status !== 'pending') {
+            return res.status(400).json({ 
+                message: `Friend request already ${friendRequest.status}`,
+                success: false 
+            });
+        }
+
+        // Mark as rejected
+        friendRequest.status = 'rejected';
+        await friendRequest.save();
+
+        return res.status(200).json({ 
+            message: 'Friend request rejected',
+            success: true,
+            updatedRequest: friendRequest
+        });
+    } catch (error) {
+        console.error('Error rejecting friend request:', error);
+        return res.status(500).json({ 
+            message: 'Internal server error',
+            success: false,
+            error: error.message 
+        });
+    }
+}
+
+// Helper function to cancel sent friend request
+export async function cancelFriendRequest(req, res) {
+    try {
+        const { id: requestId } = req.params;
+        const currentUserId = req.user._id;
+
+        const friendRequest = await FriendRequest.findById(requestId);
+        if (!friendRequest) {
+            return res.status(404).json({ 
+                message: 'Friend request not found',
+                success: false 
+            });
+        }
+
+        if (friendRequest.sender.toString() !== currentUserId.toString()) {
+            return res.status(403).json({ 
+                message: 'You can only cancel requests you sent',
+                success: false 
+            });
+        }
+
+        if (friendRequest.status !== 'pending') {
+            return res.status(400).json({ 
+                message: `Cannot cancel ${friendRequest.status} request`,
+                success: false 
+            });
+        }
+
+        // Delete the request
+        await FriendRequest.findByIdAndDelete(requestId);
+
+        return res.status(200).json({ 
+            message: 'Friend request cancelled',
+            success: true
+        });
+    } catch (error) {
+        console.error('Error cancelling friend request:', error);
+        return res.status(500).json({ 
+            message: 'Internal server error',
+            success: false,
+            error: error.message 
+        });
     }
 }
