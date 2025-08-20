@@ -1,0 +1,51 @@
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+async function testRouteFile(filename) {
+
+
+
+
+
+clear
+  console.log(`\n=== Testing ${filename} ===`);
+  try {
+    const modulePath = `./src/routes/${filename}`;
+    console.log(`Importing from: ${modulePath}`);
+    
+    const module = await import(modulePath);
+    console.log(`✓ ${filename} imported successfully`);
+    
+    if (module.default) {
+      console.log(`✓ ${filename} has default export`);
+      
+      // Test if it's a router function
+      if (typeof module.default === 'function') {
+        console.log(`✓ ${filename} exports a function (router)`);
+        
+        // Try to use it as a router
+        const app = express();
+        app.use('/test', module.default);
+        console.log(`✓ ${filename} can be used as Express middleware`);
+      } else {
+        console.log(`? ${filename} default export type:`, typeof module.default);
+        console.log(`? ${filename} default export value:`, module.default);
+      }
+    } else {
+      console.log(`✗ ${filename} has no default export`);
+      console.log('Available exports:', Object.keys(module));
+    }
+  } catch (error) {
+    console.log(`✗ ${filename} import failed: ${error.message}`);
+    if (error.stack) {
+      console.log('Stack trace:', error.stack.split('\n')[0]);
+    }
+  }
+}
+
+async function runTests() {
+  console.log('Starting route import tests...');
+  
+  await testR

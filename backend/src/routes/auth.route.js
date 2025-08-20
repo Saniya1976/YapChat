@@ -11,5 +11,4 @@ router.post('/onboarding', protectRoute, onboard);
 router.get('/me', protectRoute, (req, res) => {
   return res.status(200).json({ user: req.user });
 });
-
 export default router;

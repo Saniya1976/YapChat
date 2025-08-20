@@ -61,7 +61,7 @@ export async function getFriendRequests() {
 }
 
 export async function acceptFriendRequest(requestId) {
-  const response = await axiosInstance.post(`/users/friend-request/accept/${requestId}`); // Fixed method
+  const response = await axiosInstance.put(`/users/friend-request/accept/${requestId}`); // Changed from POST to PUT
   return response.data;
 }
 
