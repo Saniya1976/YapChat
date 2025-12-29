@@ -17,11 +17,15 @@ export const logout = async () => {
 
 export const getAuthUser = async () => {
   try {
-    const response = await axiosInstance.get("/auth/me");
+    const response = await axiosInstance.get('/auth/me');
     return response.data;
   } catch (error) {
-    console.log("Error in getAuthUser:", error);
-    return null;
+    // If 401, return null instead of throwing
+    if (error?.response?.status === 401) {
+      return { user: null }; // Not logged in is not an error
+    }
+    // Re-throw other errors
+    throw error;
   }
 };
 
