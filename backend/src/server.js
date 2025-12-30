@@ -1,38 +1,35 @@
 import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
+import "dotenv/config";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import path from "path";
 
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import chatRoutes from "./routes/chat.route.js";
 
-import { generateStreamToken } from "./lib/stream.js";
 import { connectDB } from "./lib/db.js";
-
-dotenv.config();
+import { generateStreamToken } from "./lib/stream.js";
 
 const app = express();
+const PORT = process.env.PORT || 5001;
+const __dirname = path.resolve();
 
 /* ---------- MIDDLEWARE ---------- */
-app.use(cookieParser());
-
 app.use(
   cors({
-    origin: [
-      "https://yap-chat-frontend-eosin.vercel.app",
-      "http://localhost:5173",
-    ],
+    origin: true, // SAME origin (Render domain)
     credentials: true,
   })
 );
 
 app.use(express.json());
+app.use(cookieParser());
 
 /* ---------- DB ---------- */
 connectDB();
 
-/* ---------- ROUTES ---------- */
+/* ---------- API ROUTES ---------- */
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
@@ -45,19 +42,25 @@ app.get("/api/get-token", async (req, res) => {
 
     const token = await generateStreamToken(req.user.id);
     res.json({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Token generation failed" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Token generation failed" });
   }
 });
 
-/* ---------- HEALTH CHECK (IMPORTANT FOR RENDER) ---------- */
-app.get("/", (req, res) => {
-  res.send("Backend is running");
+/* ---------- HEALTH CHECK ---------- */
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
 });
 
-/* ---------- START SERVER ---------- */
-const PORT = process.env.PORT || 5001;
+/* ---------- SERVE FRONTEND ---------- */
+app.use(express.static(path.join(__dirname, "frontend/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
+});
+
+/* ---------- START ---------- */
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

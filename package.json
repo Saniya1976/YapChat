@@ -1,12 +1,11 @@
 {
   "name": "yapchat",
   "version": "1.0.0",
-  "description":  "Real-time MERN chat app with private & group messaging, online presence, typing indicators, and video calling.",
+  "description":  "Real-time MERN chat app with private messaging, online presence, typing indicators, and video calling.",
   "main": "index.js",
   "scripts": {
      "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "npm run start --prefix backend"
-
+     "start": "node backend/src/server.js"
   },
   "keywords": [],
   "author": "",
