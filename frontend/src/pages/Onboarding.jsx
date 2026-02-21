@@ -52,9 +52,10 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="h-screen w-screen bg-base-100 flex">
-      <div className="w-full p-6 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6">Complete Your Profile</h1>
+    <div className="min-h-screen w-full bg-base-100 flex flex-col items-center py-10 px-4">
+      <div className="w-full max-w-2xl px-4">
+        <h1 className="text-2xl sm:text-4xl font-black text-center mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Complete Your Profile</h1>
+        <p className="text-center text-base-content/60 mb-10">Help others get to know you better</p>
 
         <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
           {/* PROFILE PIC */}

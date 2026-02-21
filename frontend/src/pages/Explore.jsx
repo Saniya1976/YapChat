@@ -52,24 +52,24 @@ const Explore = () => {
         <div className="min-h-screen bg-base-100 p-4 sm:p-6 lg:p-8">
             <div className="container mx-auto max-w-6xl space-y-8">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-8 rounded-3xl border border-base-300 shadow-sm space-y-6">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-primary p-3 rounded-2xl shadow-lg">
-                            <CompassIcon className="size-8 text-white" />
+                <div className="bg-gradient-to-r from-primary/5 to-secondary/5 p-4 rounded-2xl border border-base-300 shadow-sm space-y-3">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-primary/20 p-2 rounded-xl">
+                            <CompassIcon className="size-5 text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold">Explore Community</h1>
-                            <p className="text-base-content/60">Find your perfect language exchange partner</p>
+                            <h1 className="text-xl font-bold">Explore Community</h1>
+                            <p className="text-[10px] text-base-content/50 uppercase tracking-wider font-semibold">Discovery</p>
                         </div>
                     </div>
 
                     {/* Search Bar */}
-                    <div className="relative max-w-2xl">
-                        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-base-content/40" />
+                    <div className="relative max-w-md">
+                        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-base-content/40" />
                         <input
                             type="text"
-                            placeholder="Search by name or language (e.g. 'Spanish')..."
-                            className="input input-lg input-bordered w-full pl-12 bg-base-100 transition-all focus:ring-2 focus:ring-primary/20"
+                            placeholder="Search partners..."
+                            className="input input-sm input-bordered w-full pl-9 bg-base-100 transition-all focus:ring-2 focus:ring-primary/20 h-9"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />

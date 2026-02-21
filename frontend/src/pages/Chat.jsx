@@ -65,7 +65,7 @@ const ChatPage = () => {
   if (isTokenLoading || isConnecting || !client || !channel) return <ChatLoader />;
 
   return (
-    <div className="h-[93vh]">
+    <div className="h-[calc(100vh-64px)] overflow-hidden">
       <Chat client={client}>
         <Channel channel={channel}>
           <div className="w-full relative">
