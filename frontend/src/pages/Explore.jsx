@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import { getRecommendedUsers, sendFriendRequest, getOutgoingFriendReqs } from '../lib/api.js';
 import Avatar from '../components/Avatar.jsx';
-import { getLanguageFlag, capitialize } from '../lib/utils.jsx';
+import { getLanguageFlag, capitalize } from '../lib/utils.jsx';
 import { CompassIcon, MapPinIcon, UserPlusIcon, CheckCircleIcon, SearchIcon, XIcon } from 'lucide-react';
 import useAuthUser from '../hooks/useAuthUser.js';
 
@@ -126,11 +126,11 @@ const Explore = () => {
                                         <div className="flex flex-col gap-1.5 flex-grow mb-4">
                                             <div className="badge badge-secondary badge-xs py-2 px-2 gap-1 w-fit">
                                                 {getLanguageFlag(user.nativeLanguage)}
-                                                <span>Native: {capitialize(user.nativeLanguage)}</span>
+                                                <span>Native: {capitalize(user.nativeLanguage)}</span>
                                             </div>
                                             <div className="badge badge-outline badge-xs py-2 px-2 gap-1 w-fit">
                                                 {getLanguageFlag(user.learningLanguage)}
-                                                <span>Learning: {capitialize(user.learningLanguage)}</span>
+                                                <span>Learning: {capitalize(user.learningLanguage)}</span>
                                             </div>
 
                                             {/* Micro Bio */}

@@ -7,7 +7,7 @@ import {
   getUserFriends,
   sendFriendRequest
 } from '../lib/api.js';
-import { getLanguageFlag, capitialize } from '../lib/utils.jsx';
+import { getLanguageFlag, capitalize } from '../lib/utils.jsx';
 import FriendCard from '../components/FriendCard.jsx';
 import { CheckCircleIcon, MapPinIcon, UserPlusIcon, UsersIcon } from "lucide-react";
 import NoFriendsFound from '../components/NoFriendsFound.jsx';
@@ -252,11 +252,11 @@ const Home = () => {
                       <div className="flex flex-wrap gap-1.5 shrink-0">
                         <span className="badge badge-secondary hover:badge-primary transition-colors duration-300">
                           <span className="mr-1">{getLanguageFlag(user.nativeLanguage)}</span>
-                          Native: {capitialize(user.nativeLanguage)}
+                          Native: {capitalize(user.nativeLanguage)}
                         </span>
                         <span className="badge badge-outline hover:badge-outline-primary transition-colors duration-300">
                           <span className="mr-1">{getLanguageFlag(user.learningLanguage)}</span>
-                          Learning: {capitialize(user.learningLanguage)}
+                          Learning: {capitalize(user.learningLanguage)}
                         </span>
                       </div>
 
