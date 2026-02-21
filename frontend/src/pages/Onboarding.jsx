@@ -25,13 +25,13 @@ const Onboarding = () => {
     mutationFn: completeOnboarding,
     onSuccess: () => {
       toast.success("Profile onboarded successfully");
-       queryClient.setQueryData(["authUser"], (old) => ({
-      ...old,
-      user: {
-        ...old?.user,
-        isOnboarded: true,
-      },
-    }));
+      queryClient.setQueryData(["authUser"], (old) => ({
+        ...old,
+        user: {
+          ...old?.user,
+          isOnboarded: true,
+        },
+      }));
       navigate("/");
     },
     onError: (error) => {
@@ -45,8 +45,8 @@ const Onboarding = () => {
   };
 
   const handleRandomAvatar = () => {
-    const idx = Math.floor(Math.random() * 100) + 1;
-    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+    const randomSeed = Math.random().toString(36).substring(7);
+    const randomAvatar = `https://api.dicebear.com/9.x/avataaars/svg?seed=${randomSeed}`;
     setFormState({ ...formState, profilePic: randomAvatar });
     toast.success("Random profile picture generated!");
   };

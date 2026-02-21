@@ -1,45 +1,43 @@
-import React from 'react'
-import { LANGUAGE_TO_FLAG } from "../constants";
+import React from 'react';
 import { Link } from "react-router-dom";
+import { getLanguageFlag } from "../lib/utils.jsx";
+import Avatar from './Avatar.jsx';
 
 const FriendCard = ({ friend }) => {
   return (
-    <div className="card bg-base-200 hover:shadow-md transition-shadow">
-      <div className="card-body p-4">
+    <div className="card bg-base-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-base-300">
+      <div className="card-body p-4 flex flex-col h-full">
         {/* USER INFO */}
-        <div className="flex items-center gap-3 mb-3">
-          <div className="avatar size-12 bg-gray-200 rounded-full flex items-center justify-center">
-            <img 
-              src={friend.profilePic || 'https://yourcdn.com/default-avatar.png'} 
-              alt={friend.fullName}
-              className="rounded-full w-full h-full object-cover"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '';
-                e.target.parentElement.innerHTML = `
-                  <span class="text-lg font-semibold text-gray-600">
-                    ${friend.fullName?.charAt(0) || 'U'}
-                  </span>
-                `;
-              }}
-            />
+        <div className="flex items-center gap-3 mb-3 shrink-0">
+          <Avatar
+            src={friend.profilePic}
+            alt={friend.fullName}
+            size="size-12"
+          />
+          <h3 className="font-semibold truncate text-lg">{friend.fullName}</h3>
+        </div>
+
+        {/* LANGUAGES */}
+        <div className="flex flex-col gap-2 mb-4 flex-grow">
+          <div className="flex items-center gap-2">
+            <span className="badge badge-secondary badge-sm py-3 px-3">
+              {getLanguageFlag(friend.nativeLanguage)}
+              <span className="ml-1">Native: {friend.nativeLanguage}</span>
+            </span>
           </div>
-          <h3 className="font-semibold truncate">{friend.fullName}</h3>
+          <div className="flex items-center gap-2">
+            <span className="badge badge-outline badge-sm py-3 px-3">
+              {getLanguageFlag(friend.learningLanguage)}
+              <span className="ml-1">Learning: {friend.learningLanguage}</span>
+            </span>
+          </div>
         </div>
 
-
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          <span className="badge badge-secondary text-xs">
-            {getLanguageFlag(friend.nativeLanguage)}
-            Native: {friend.nativeLanguage}
-          </span>
-          <span className="badge badge-outline text-xs">
-            {getLanguageFlag(friend.learningLanguage)}
-            Learning: {friend.learningLanguage}
-          </span>
-        </div>
-        
-        <Link to={`/chat/${friend._id}`} className="btn btn-outline w-full">
+        {/* ACTION */}
+        <Link
+          to={`/chat/${friend._id}`}
+          className="btn btn-primary btn-outline w-full mt-auto group hover:scale-[1.02] transition-transform"
+        >
           Message
         </Link>
       </div>
@@ -48,22 +46,3 @@ const FriendCard = ({ friend }) => {
 };
 
 export default FriendCard;
-
-export function getLanguageFlag(language) {
-  if (!language) return null;
-
-  const langLower = language.toLowerCase();
-  const countryCode = LANGUAGE_TO_FLAG[langLower];
-
-  if (countryCode) {
-    return (
-      <img
-        src={`https://flagcdn.com/24x18/${countryCode}.png`}
-        alt={`${langLower} flag`}
-        className="h-3 mr-1 inline-block"
-        loading="lazy" // Add lazy loading
-      />
-    );
-  }
-  return null;
-}

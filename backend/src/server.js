@@ -1,5 +1,6 @@
 import express from "express";
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config(); // Loads .env from the directory where npm run dev is executed
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
@@ -33,20 +34,6 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
-
-app.get("/api/get-token", async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const token = await generateStreamToken(req.user.id);
-    res.json({ token });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Token generation failed" });
-  }
-});
 
 /* ---------- HEALTH CHECK ---------- */
 app.get("/health", (req, res) => {

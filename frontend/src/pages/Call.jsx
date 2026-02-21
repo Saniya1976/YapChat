@@ -21,22 +21,25 @@ import PageLoader from "../components/PageLoader.jsx";
 const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
 
 const Call = () => {
-  const {id: callId} = useParams();
+  const { id: callId } = useParams();
   const [client, setClient] = useState(null);
   const [call, setCall] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const {authUser, isLoading} = useAuthUser();
-  const {data: tokenData} = useQuery({
+  const { authUser, isLoading } = useAuthUser();
+  const { data: tokenData } = useQuery({
     queryKey: ['stream-token'],
     queryFn: getStreamToken,
     enabled: !!authUser
   });
-  
+
   useEffect(() => {
+    let videoClient;
+    let callInstance;
+
     const initCall = async () => {
       if (!tokenData?.token || !authUser || !callId) return;
-      
+
       setIsConnecting(true);
       try {
         const user = {
@@ -44,16 +47,16 @@ const Call = () => {
           name: authUser.fullName,
           image: authUser.profilePic,
         };
-        
-        const videoClient = new StreamVideoClient({
+
+        videoClient = new StreamVideoClient({
           apiKey: STREAM_API_KEY,
           user,
           token: tokenData.token,
         });
-        
-        const callInstance = videoClient.call("default", callId);
+
+        callInstance = videoClient.call("default", callId);
         await callInstance.join({ create: true });
-        
+
         console.log("Joined Successfully");
         setClient(videoClient);
         setCall(callInstance);
@@ -64,16 +67,16 @@ const Call = () => {
         setIsConnecting(false);
       }
     };
-    
+
     initCall();
-    
+
     // Cleanup function
     return () => {
-      if (call) {
-        call.leave().catch(console.error);
+      if (callInstance) {
+        callInstance.leave().catch(console.error);
       }
-      if (client) {
-        client.disconnectUser().catch(console.error);
+      if (videoClient) {
+        videoClient.disconnectUser().catch(console.error);
       }
     };
   }, [tokenData, authUser, callId]);

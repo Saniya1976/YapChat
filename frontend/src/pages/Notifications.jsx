@@ -3,9 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon } from "lucide-react";
 import { acceptFriendRequest, getFriendRequests } from "../lib/api.js";
 import NoNotificationsFound from "../components/NoNotificationsFound.jsx";
+import Avatar from "../components/Avatar.jsx";
+import useAuthUser from "../hooks/useAuthUser.js";
 
 const Notifications = () => {
   const queryClient = useQueryClient();
+  const { authUser } = useAuthUser();
 
   const { data: friendRequests, isLoading, error } = useQuery({
     queryKey: ["friendRequests"],
@@ -64,18 +67,11 @@ const Notifications = () => {
                       <div className="card-body p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="avatar w-14 h-14 rounded-full bg-base-300">
-                              {request?.sender?.profilePic ? (
-                                <img 
-                                  src={request.sender.profilePic} 
-                                  alt={request.sender.fullName || 'User'} 
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-2xl">
-                                  👤
-                                </div>
-                              )}
-                            </div>
+                            <Avatar
+                              src={request?.sender?.profilePic}
+                              alt={request?.sender?.fullName}
+                              size="size-14"
+                            />
                             <div>
                               <h3 className="font-semibold">
                                 {request?.sender?.fullName || 'Unknown User'}
@@ -119,45 +115,48 @@ const Notifications = () => {
                 </h2>
 
                 <div className="space-y-3">
-                  {acceptedRequests.map((notification) => (
-                    <div 
-                      key={notification?._id || Math.random()} 
-                      className="card bg-base-200 shadow-sm"
-                    >
-                      <div className="card-body p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="avatar mt-1 size-10 rounded-full">
-                            {notification?.recipient?.profilePic ? (
-                              <img
-                                src={notification.recipient.profilePic}
-                                alt={notification.recipient.fullName || 'User'}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                👤
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold">
-                              {notification?.recipient?.fullName || 'Unknown User'}
-                            </h3>
-                            <p className="text-sm my-1">
-                              {notification?.recipient?.fullName || 'Someone'} accepted your friend request
-                            </p>
-                            <p className="text-xs flex items-center opacity-70">
-                              <ClockIcon className="h-3 w-3 mr-1" />
-                              Recently
-                            </p>
-                          </div>
-                          <div className="badge badge-success">
-                            <MessageSquareIcon className="h-3 w-3 mr-1" />
-                            New Friend
+                  {acceptedRequests.map((notification) => {
+                    // Determine which user is the 'other' person
+                    const isCurrentUserRecipient = notification?.recipient?._id === authUser?._id;
+                    const otherPerson = isCurrentUserRecipient ? notification?.sender : notification?.recipient;
+                    const actionText = isCurrentUserRecipient
+                      ? "You accepted a friend request from"
+                      : "accepted your friend request";
+
+                    return (
+                      <div
+                        key={notification?._id || Math.random()}
+                        className="card bg-base-200 shadow-sm border border-base-300/30 overflow-hidden"
+                      >
+                        <div className="card-body p-4">
+                          <div className="flex items-center gap-4">
+                            <Avatar
+                              src={otherPerson?.profilePic}
+                              alt={otherPerson?.fullName}
+                              size="size-12"
+                            />
+                            <div className="flex-1">
+                              <p className="text-sm">
+                                <span className="font-bold text-base-content">{otherPerson?.fullName || 'Someone'}</span>
+                                {" "}
+                                {isCurrentUserRecipient
+                                  ? `is now your friend!`
+                                  : `accepted your friend request!`}
+                              </p>
+                              <p className="text-xs flex items-center opacity-50 mt-1">
+                                <ClockIcon className="h-3 w-3 mr-1" />
+                                Recently
+                              </p>
+                            </div>
+                            <div className="badge badge-success badge-sm py-3 px-3 gap-1.5 font-medium">
+                              <UserCheckIcon className="h-3.5 w-3.5" />
+                              Connected
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}

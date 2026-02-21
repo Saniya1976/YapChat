@@ -1,16 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import React, { useEffect, useState } from 'react'
 import { Link } from "react-router-dom"
-import { 
+import {
   getOutgoingFriendReqs,
   getRecommendedUsers,
   getUserFriends,
-  sendFriendRequest 
+  sendFriendRequest
 } from '../lib/api.js';
-import { getLanguageFlag } from '../components/FriendCard.jsx';
+import { getLanguageFlag, capitialize } from '../lib/utils.jsx';
 import FriendCard from '../components/FriendCard.jsx';
 import { CheckCircleIcon, MapPinIcon, UserPlusIcon, UsersIcon } from "lucide-react";
-import NoFriendsFound from '../components/NoFriendsFound .jsx';
+import NoFriendsFound from '../components/NoFriendsFound.jsx';
+import Avatar from '../components/Avatar.jsx';
 
 const Home = () => {
   const queryClient = useQueryClient();
@@ -48,7 +49,7 @@ const Home = () => {
   });
 
   // Send Friend Request Mutation
-  const { mutate: sendRequestMutation, isPending, error } = useMutation({
+  const { mutate: sendRequestMutation, error } = useMutation({
     mutationFn: (userId) => sendFriendRequest(userId),
     onMutate: async (userId) => {
       setPendingRequests((prev) => new Set(prev).add(userId));
@@ -69,19 +70,21 @@ const Home = () => {
     },
     onError: (error, userId) => {
       const errorMessage = error.response?.data?.message?.toLowerCase() || '';
-      const isAlreadyExists = errorMessage.includes('already exists') || 
-                            errorMessage.includes('already sent') ||
-                            errorMessage.includes('duplicate');
-      
+      const isAlreadyExists = errorMessage.includes('already exists') ||
+        errorMessage.includes('already sent') ||
+        errorMessage.includes('duplicate');
+
       const isSelfRequest = errorMessage.includes('cannot send friend request to yourself') ||
-                           errorMessage.includes('self');
-      
+        errorMessage.includes('self');
+
+      console.log('Friend request error', { isAlreadyExists, isSelfRequest });
+
       setPendingRequests((prev) => {
         const newSet = new Set(prev);
         newSet.delete(userId);
         return newSet;
       });
-      
+
       if (!isAlreadyExists) {
         setOutgoingRequestsIds((prev) => {
           const newSet = new Set(prev);
@@ -103,26 +106,26 @@ const Home = () => {
     } else if (outgoingFriendReqs?.outgoingReqs && Array.isArray(outgoingFriendReqs.outgoingReqs)) {
       requestsArray = outgoingFriendReqs.outgoingReqs;
     }
-    
+
     if (requestsArray.length > 0) {
       requestsArray.forEach((req) => {
-        const recipientId = req.recipient?._id || 
-                           req.recipient || 
-                           req.to?._id || 
-                           req.to ||
-                           req.recipientId ||
-                           req.userId;
+        const recipientId = req.recipient?._id ||
+          req.recipient ||
+          req.to?._id ||
+          req.to ||
+          req.recipientId ||
+          req.userId;
         if (recipientId) {
           outgoingIds.add(recipientId);
         }
       });
     }
-    
+
     setOutgoingRequestsIds(prevIds => {
       const prevArray = Array.from(prevIds).sort();
       const newArray = Array.from(outgoingIds).sort();
-      if (prevArray.length !== newArray.length || 
-          !prevArray.every((id, index) => id === newArray[index])) {
+      if (prevArray.length !== newArray.length ||
+        !prevArray.every((id, index) => id === newArray[index])) {
         return outgoingIds;
       }
       return prevIds;
@@ -143,8 +146,8 @@ const Home = () => {
               Connect and practice with your language partners
             </p>
           </div>
-          <Link 
-            to="/notifications" 
+          <Link
+            to="/notifications"
             className="btn btn-outline btn-sm btn-primary hover:btn-primary hover:scale-105 transition-all duration-300 shadow-md"
           >
             <UsersIcon className="mr-2 size-4" />
@@ -167,12 +170,12 @@ const Home = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {friends.map((friend) => (
-              <div key={friend._id} className="transform hover:scale-105 transition-all duration-300 hover:shadow-xl">
-                <FriendCard 
+              <div key={friend._id} className="h-full transform hover:scale-[1.03] transition-all duration-300">
+                <FriendCard
                   friend={{
                     ...friend,
                     profilePic: friend.profilePic || '/default-avatar.png'
-                  }} 
+                  }}
                 />
               </div>
             ))}
@@ -221,22 +224,19 @@ const Home = () => {
                 const hasError = error?.response?.data?.userId === user._id;
 
                 return (
-                  <div 
+                  <div
                     key={user._id}
-                    className="card bg-gradient-to-br from-base-100 to-base-200 hover:from-base-50 hover:to-base-100 border border-base-300 hover:border-primary/30 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                    className="card bg-gradient-to-br from-base-100 to-base-200 hover:from-base-50 hover:to-base-100 border border-base-300 hover:border-primary/30 shadow-lg hover:shadow-2xl h-full flex flex-col transform hover:scale-[1.03] transition-all duration-300"
                   >
-                    <div className="card-body p-5 space-y-4">
+                    <div className="card-body p-5 flex flex-col h-full space-y-4">
                       {/* User Info */}
-                      <div className="flex items-center gap-3">
-                        <div className="avatar size-16 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-300">
-                          <div className="rounded-full overflow-hidden">
-                            <img 
-                              src={user.profilePic} 
-                              alt={user.fullName}
-                              className="hover:scale-110 transition-transform duration-300"
-                            />
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <Avatar
+                          src={user.profilePic}
+                          alt={user.fullName}
+                          size="size-16"
+                          className="ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-300"
+                        />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-lg truncate">{user.fullName}</h3>
                           {user.location && (
@@ -249,7 +249,7 @@ const Home = () => {
                       </div>
 
                       {/* Languages */}
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1.5 shrink-0">
                         <span className="badge badge-secondary hover:badge-primary transition-colors duration-300">
                           <span className="mr-1">{getLanguageFlag(user.nativeLanguage)}</span>
                           Native: {capitialize(user.nativeLanguage)}
@@ -261,41 +261,44 @@ const Home = () => {
                       </div>
 
                       {/* Bio */}
-                      {user.bio && <p className="text-sm text-base-content/70 leading-relaxed">{user.bio}</p>}
-                   
+                      <div className="flex-grow">
+                        {user.bio && <p className="text-sm text-base-content/70 leading-relaxed line-clamp-3">{user.bio}</p>}
+                      </div>
+
                       {/* Action Button */}
-                      <button
-                        className={`btn w-full mt-2 transition-all duration-300 ${
-                          hasRequestBeenSent 
-                            ? "btn-success btn-disabled shadow-md" 
+                      <div className="mt-auto pt-2">
+                        <button
+                          className={`btn w-full transition-all duration-300 ${hasRequestBeenSent
+                            ? "btn-success btn-disabled shadow-md"
                             : hasError
-                            ? "btn-error hover:btn-error-focus hover:scale-105 shadow-lg hover:shadow-xl"
-                            : "btn-primary hover:btn-primary-focus hover:scale-105 shadow-lg hover:shadow-xl"
-                        }`}
-                        onClick={() => {
-                          if (!hasRequestBeenSent) {
-                            sendRequestMutation(user._id);
-                          }
-                        }}
-                        disabled={hasRequestBeenSent || isThisButtonPending}
-                      >
-                        {hasRequestBeenSent ? (
-                          <>
-                            <CheckCircleIcon className="size-4 mr-2" />
-                            Request Sent
-                          </>
-                        ) : hasError ? (
-                          <>
-                            <UserPlusIcon className="size-4 mr-2" />
-                            Try Again
-                          </>
-                        ) : (
-                          <>
-                            <UserPlusIcon className="size-4 mr-2" />
-                            {isThisButtonPending ? "Sending..." : "Send Friend Request"}
-                          </>
-                        )}
-                      </button>
+                              ? "btn-error hover:btn-error-focus hover:scale-105 shadow-lg hover:shadow-xl"
+                              : "btn-primary hover:btn-primary-focus hover:scale-105 shadow-lg hover:shadow-xl"
+                            }`}
+                          onClick={() => {
+                            if (!hasRequestBeenSent) {
+                              sendRequestMutation(user._id);
+                            }
+                          }}
+                          disabled={hasRequestBeenSent || isThisButtonPending}
+                        >
+                          {hasRequestBeenSent ? (
+                            <>
+                              <CheckCircleIcon className="size-4 mr-2" />
+                              Request Sent
+                            </>
+                          ) : hasError ? (
+                            <>
+                              <UserPlusIcon className="size-4 mr-2" />
+                              Try Again
+                            </>
+                          ) : (
+                            <>
+                              <UserPlusIcon className="size-4 mr-2" />
+                              {isThisButtonPending ? "Sending..." : "Send Friend Request"}
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
@@ -308,6 +311,5 @@ const Home = () => {
   )
 }
 
-export default Home
+export default Home;
 
-const capitialize = (str) => str.charAt(0).toUpperCase() + str.slice(1);

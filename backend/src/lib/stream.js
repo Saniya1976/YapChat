@@ -1,13 +1,19 @@
 import dotenv from "dotenv";
-dotenv.config({ path: "backend/.env" });
+dotenv.config(); // Loads .env from current working directory
 import { StreamChat } from "stream-chat";
+
 const apiKey = process.env.STREAM_API_KEY;
 const apiSecret = process.env.STREAM_API_SECRET;
 
 // Check if env variables are available
+console.log("Stream API Config Check:", {
+  hasApiKey: !!apiKey,
+  hasApiSecret: !!apiSecret,
+  cwd: process.cwd()
+});
+
 if (!apiKey || !apiSecret) {
-  console.error(" Stream API Key or Secret is missing!");
-  process.exit(1); // Exit the process if credentials are missing
+  console.error("❌ CRITICAL ERROR: STREAM_API_KEY or STREAM_API_SECRET is missing!");
 }
 
 // Initialize the Stream Chat client
