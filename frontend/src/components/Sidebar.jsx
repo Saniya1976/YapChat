@@ -1,7 +1,7 @@
 import React from 'react'
 import useAuthUser from '../hooks/useAuthUser.js'
 import { Link, useLocation } from 'react-router-dom'
-import { BellIcon, HomeIcon, ShipWheelIcon, UsersIcon } from "lucide-react";
+import { BellIcon, CompassIcon, HomeIcon, ShipWheelIcon, UsersIcon } from "lucide-react";
 import Avatar from './Avatar.jsx';
 
 const Sidebar = () => {
@@ -28,6 +28,23 @@ const Sidebar = () => {
           <span>Home</span>
         </Link>
 
+        <Link
+          to="/friends"
+          className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${currentPath === "/friends" ? "btn-active" : ""
+            }`}
+        >
+          <UsersIcon className="size-5 text-base-content opacity-70" />
+          <span>Friends</span>
+        </Link>
+
+        <Link
+          to="/explore"
+          className={`btn btn-ghost justify-start w-full gap-3 px-3 normal-case ${currentPath === "/explore" ? "btn-active" : ""
+            }`}
+        >
+          <CompassIcon className="size-5 text-base-content opacity-70" />
+          <span>Explore</span>
+        </Link>
 
         <Link
           to="/notifications"
