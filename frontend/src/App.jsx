@@ -9,8 +9,6 @@ import Call from './pages/Call.jsx';
 import Notifications from './pages/Notifications.jsx';
 import Friends from './pages/Friends.jsx';
 import Explore from './pages/Explore.jsx';
-import EmailVerificationPending from './pages/EmailVerificationPending.jsx';
-import VerifyEmail from './pages/VerifyEmail.jsx';
 import { Toaster } from 'react-hot-toast';
 import PageLoader from './components/PageLoader.jsx';
 import useAuthUser from './hooks/useAuthUser.js';
@@ -108,10 +106,9 @@ const App = () => {
           path="/signup"
           element={!isAuthenticated ? <SignUp /> : <Navigate to="/" />}
         />
-        {/* Email verification routes – always public */}
-        <Route path="/verify-email-pending" element={<EmailVerificationPending />} />
-        <Route path="/verify-email/:token" element={<VerifyEmail />} />
       </Routes>
+
+      <Toaster />
     </div>
   );
 };

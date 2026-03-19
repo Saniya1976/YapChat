@@ -1,15 +1,13 @@
-import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { signup } from "../lib/api.js";
 
 const useSignUp = () => {
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: signup,
-    onSuccess: (_data, variables) => {
-      // Redirect to the "check your email" page and pass the email for the resend button
-      navigate("/verify-email-pending", { state: { email: variables.email } });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
 

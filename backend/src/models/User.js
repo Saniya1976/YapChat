@@ -40,18 +40,6 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    isVerified: {
-        type: Boolean,
-        default: false
-    },
-    verificationToken: {
-        type: String,
-        default: null
-    },
-    verificationTokenExpires: {
-        type: Date,
-        default: null
-    },
     friends: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -71,6 +59,7 @@ userSchema.pre('save', async function (next) {
         next(error);
     }
 });
+
 userSchema.methods.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
