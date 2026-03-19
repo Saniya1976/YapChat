@@ -19,7 +19,7 @@ const __dirname = path.resolve();
 /* ---------- MIDDLEWARE ---------- */
 app.use(
   cors({
-    origin: true, // SAME origin (Render domain)
+    origin: process.env.FRONTEND_URL || true,
     credentials: true,
   })
 );

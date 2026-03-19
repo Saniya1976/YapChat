@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShipWheelIcon, EyeIcon, EyeOffIcon } from "lucide-react";
+import { ShipWheelIcon, EyeIcon, EyeOffIcon, MailWarningIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import useLogin from "../hooks/useLogin";
 
@@ -17,27 +17,45 @@ const Login = () => {
     loginMutation(loginData);
   };
 
+  // The backend returns { unverified: true } in the response body for 403s
+  const isUnverified = error?.response?.data?.unverified === true;
+  const errorMessage = error?.response?.data?.message || "Something went wrong!";
+
   return (
-    <div
-      className="h-screen w-screen flex"
-      data-theme="forest"
-    >
+    <div className="h-screen w-screen flex" data-theme="forest">
       <div className="flex flex-col lg:flex-row w-full bg-base-100">
         {/* LOGIN FORM SECTION */}
         <div className="w-full lg:w-1/2 p-4 sm:p-8 flex flex-col">
           {/* LOGO */}
           <div className="mb-4 flex items-center justify-start gap-2">
             <ShipWheelIcon className="size-9 text-primary" />
-            <span className="text-3xl font-bold font-mono bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary  tracking-wider">
+            <span className="text-3xl font-bold font-mono bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary tracking-wider">
               YapChat
             </span>
           </div>
 
-          {/* ERROR MESSAGE DISPLAY */}
+          {/* ERROR / UNVERIFIED MESSAGE */}
           {error && (
-            <div className="alert alert-error mb-4">
-              <span>{error?.response?.data?.message || "Something went wrong!"}</span>
-            </div>
+            isUnverified ? (
+              <div className="alert mb-4 flex flex-col items-start gap-2 border border-warning/40 bg-warning/10 text-warning-content rounded-xl p-4">
+                <div className="flex items-center gap-2 font-semibold">
+                  <MailWarningIcon className="w-5 h-5 text-warning" />
+                  <span className="text-warning">Email not verified</span>
+                </div>
+                <p className="text-sm opacity-90">{errorMessage}</p>
+                <Link
+                  to="/verify-email-pending"
+                  state={{ email: loginData.email }}
+                  className="btn btn-warning btn-xs mt-1"
+                >
+                  Resend verification email
+                </Link>
+              </div>
+            ) : (
+              <div className="alert alert-error mb-4">
+                <span>{errorMessage}</span>
+              </div>
+            )
           )}
 
           <div className="w-full">
@@ -121,7 +139,6 @@ const Login = () => {
         {/* IMAGE SECTION */}
         <div className="hidden lg:flex w-full lg:w-1/2 bg-primary/10 items-center justify-center">
           <div className="max-w-md p-8">
-            {/* Illustration */}
             <div className="relative aspect-square max-w-sm mx-auto">
               <img src="/image.png" alt="Language connection illustration" className="w-full h-full" />
             </div>

@@ -34,6 +34,16 @@ export const completeOnboarding = async (userData) => {
   return response.data;
 };
 
+export const verifyEmail = async (token) => {
+  const response = await axiosInstance.get(`/auth/verify-email/${token}`);
+  return response.data;
+};
+
+export const resendVerificationEmail = async (email) => {
+  const response = await axiosInstance.post("/auth/resend-verification", { email });
+  return response.data;
+};
+
 export async function getUserFriends() {
   const response = await axiosInstance.get("/users/friends");
   return response.data;
