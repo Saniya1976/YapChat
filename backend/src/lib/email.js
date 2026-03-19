@@ -119,13 +119,9 @@ async function createTransporter() {
   });
 }
 
-// Cache the transporter so we don't hit Ethereal's endpoint on every email
-let _transporterCache = null;
+// Don't cache in production — always pick up latest env vars from Render
 async function getTransporter() {
-  if (!_transporterCache) {
-    _transporterCache = await createTransporter();
-  }
-  return _transporterCache;
+  return createTransporter();
 }
 
 /**
@@ -141,9 +137,11 @@ export async function sendVerificationEmail(toEmail, token, fullName) {
   const BASE_URL = process.env.FRONTEND_URL || `http://localhost:5173`;
   const verifyUrl = `${BASE_URL}/verify-email/${token}`;
 
-  const fromAddress = process.env.EMAIL_USER
-    ? `"YapChat" <${process.env.EMAIL_USER}>`
-    : '"YapChat" <noreply@yapchat.dev>';
+  const fromAddress = process.env.RESEND_API_KEY
+    ? `"YapChat" <onboarding@resend.dev>`
+    : process.env.EMAIL_USER
+      ? `"YapChat" <${process.env.EMAIL_USER}>`
+      : '"YapChat" <noreply@yapchat.dev>';
 
   const info = await transporter.sendMail({
     from: fromAddress,
