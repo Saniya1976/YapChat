@@ -2,19 +2,18 @@ import { create } from "zustand";
 import { StreamChat } from "stream-chat";
 import toast from "react-hot-toast";
 
-const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
-
 export const useChatStore = create((set, get) => ({
     client: null,
     channel: null,
     isConnecting: false,
     connectionError: null,
 
-    connect: async (authUser, token, targetUserId) => {
+    connect: async (authUser, token, targetUserId, apiKey) => {
         // If already connecting or already connected to the same person, skip
         const { client, channel, isConnecting, connectionError } = get();
 
         const channelId = [authUser._id, targetUserId].sort().join("-");
+        const streamApiKey = apiKey || import.meta.env.VITE_STREAM_API_KEY;
 
         if (isConnecting) return;
         if (!connectionError && client?.userID === authUser._id && channel?.id === channelId) {
@@ -22,11 +21,17 @@ export const useChatStore = create((set, get) => ({
             return;
         }
 
+        if (!streamApiKey) {
+            set({ isConnecting: false, connectionError: "Chat is not configured." });
+            toast.error("Chat connection failed. Please refresh.");
+            return;
+        }
+
         try {
             set({ isConnecting: true, connectionError: null });
             console.log("ChatStore: Initializing connection...");
 
-            const chatClient = StreamChat.getInstance(STREAM_API_KEY);
+            const chatClient = StreamChat.getInstance(streamApiKey);
 
             // Connect user if not connected
             if (chatClient.userID !== authUser._id) {

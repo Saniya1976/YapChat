@@ -33,9 +33,9 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (authUser && tokenData?.token && targetUserId) {
-      connect(authUser, tokenData.token, targetUserId);
+      connect(authUser, tokenData.token, targetUserId, tokenData.apiKey);
     }
-  }, [authUser, tokenData?.token, targetUserId, connect]);
+  }, [authUser, tokenData?.token, tokenData?.apiKey, targetUserId, connect]);
 
   const handleVideoCall = () => {
     if (channel) {

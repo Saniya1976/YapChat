@@ -18,7 +18,6 @@ import {
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 import toast from "react-hot-toast";
 import PageLoader from "../components/PageLoader.jsx";
-const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
 
 const Call = () => {
   const { id: callId } = useParams();
@@ -48,8 +47,13 @@ const Call = () => {
           image: authUser.profilePic,
         };
 
+        const streamApiKey = tokenData.apiKey || import.meta.env.VITE_STREAM_API_KEY;
+        if (!streamApiKey) {
+          throw new Error("Stream API key is missing");
+        }
+
         videoClient = new StreamVideoClient({
-          apiKey: STREAM_API_KEY,
+          apiKey: streamApiKey,
           user,
           token: tokenData.token,
         });

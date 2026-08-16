@@ -4,7 +4,7 @@
   "description":  "Real-time MERN chat app with private messaging, online presence, typing indicators, and video calling.",
   "main": "index.js",
   "scripts": {
-     "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
+     "build": "npm install --prefix backend && npm install --prefix frontend && VITE_STREAM_API_KEY=${VITE_STREAM_API_KEY:-$STREAM_API_KEY} npm run build --prefix frontend",
      "start": "node backend/src/server.js"
   },
   "keywords": [],

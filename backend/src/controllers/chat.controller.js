@@ -36,7 +36,7 @@ export async function getStreamToken(req, res) {
 
     const token = await generateStreamToken(req.user._id);
     console.log("Stream token generated successfully for user:", user._id);
-    res.status(200).json({ token });
+    res.status(200).json({ token, apiKey: process.env.STREAM_API_KEY });
   } catch (error) {
     console.error("CRITICAL error in getStreamToken controller:");
     console.error("- Error message:", error.message);
