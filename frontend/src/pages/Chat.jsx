@@ -24,7 +24,7 @@ const ChatPage = () => {
   const { authUser } = useAuthUser();
   const { client, channel, isConnecting, connectionError, connect } = useChatStore();
 
-  const { data: tokenData, isLoading: isTokenLoading, isError: isTokenError, error: tokenError } = useQuery({
+  const { data: tokenData, isLoading: isTokenLoading, isError: isTokenError } = useQuery({
     queryKey: ["streamToken", targetUserId],
     queryFn: () => getStreamToken(targetUserId),
     enabled: !!authUser && !!targetUserId,
@@ -50,12 +50,11 @@ const ChatPage = () => {
   };
 
   if (isTokenError || connectionError) {
-    const errorMsg = tokenError?.response?.data?.error || connectionError || "Check your internet connection.";
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-6">
         <div className="bg-error/10 p-4 rounded-lg">
           <p className="text-error font-semibold">Failed to connect to chat service.</p>
-          <p className="text-sm opacity-70 mt-1">{errorMsg}</p>
+          <p className="text-sm opacity-70 mt-1">Check your internet connection, then try again.</p>
         </div>
         <button onClick={() => window.location.reload()} className="btn btn-primary btn-sm">Try Again</button>
       </div>
