@@ -277,4 +277,50 @@ export async function getOutgoingFriendRequests(req, res) {
     }
 }
 
-// Additional helper function to reject friend requests
+export async function rejectFriendRequest(req, res) {
+    try {
+        const { id: requestId } = req.params;
+        const currentUserId = req.user._id;
+
+        const friendRequest = await FriendRequest.findById(requestId);
+        if (!friendRequest) {
+            return res.status(404).json({
+                message: 'Friend request not found',
+                success: false
+            });
+        }
+
+        if (friendRequest.recipient.toString() !== currentUserId.toString()) {
+            return res.status(403).json({
+                message: 'You can only reject requests sent to you',
+                success: false
+            });
+        }
+
+        if (friendRequest.status !== 'pending') {
+            return res.status(400).json({
+                message: `Friend request already ${friendRequest.status}`,
+                success: false
+            });
+        }
+
+        const updatedRequest = await FriendRequest.findByIdAndUpdate(
+            requestId,
+            { status: 'rejected' },
+            { new: true }
+        ).populate('sender recipient', 'fullName profilePic nativeLanguage learningLanguage');
+
+        return res.status(200).json({
+            message: 'Friend request rejected',
+            success: true,
+            updatedRequest
+        });
+    } catch (error) {
+        console.error('Error rejecting friend request:', error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false,
+            error: error.message
+        });
+    }
+}

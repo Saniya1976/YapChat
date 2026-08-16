@@ -70,6 +70,11 @@ export async function acceptFriendRequest(requestId) {
   return response.data;
 }
 
+export async function rejectFriendRequest(requestId) {
+  const response = await axiosInstance.put(`/users/friend-request/reject/${requestId}`);
+  return response.data;
+}
+
 export async function getStreamToken(targetUserId) {
   const url = targetUserId ? `/chat/token?targetUserId=${targetUserId}` : "/chat/token";
   const response = await axiosInstance.get(url);
